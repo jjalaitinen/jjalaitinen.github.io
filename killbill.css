@@ -1,0 +1,390 @@
+body {
+  background-color: #fbe305;
+  overflow-x: hidden;
+  margin: 0;
+}
+#about_button,
+#portfolio_button,
+#skills_button {
+  background-color: black;
+  color: #fbe305;
+  border: none;
+  font-family: "Anton", sans-serif;
+  font-size: x-large;
+  transition: 0.5s;
+}
+#about_button {
+  color: red;
+}
+#about_button,
+#portfolio_button,
+#skills_button:hover {
+  cursor: pointer;
+}
+
+.koko_flex {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#mustapalkki {
+  order: 2;
+  width: 100%;
+  height: 20%;
+  display: flex;
+  background-color: black;
+  margin: 0;
+}
+#nimi_ja_titteli {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 2vw;
+  margin-top: 10vw;
+  font-family: "Anton", sans-serif;
+}
+#etunimi_sukunimi {
+  display: flex;
+  font-size: 25vw;
+  font-weight: bold;
+  line-height: 0.9em;
+  letter-spacing: -0.02em;
+  margin-bottom: 0;
+  margin-top: 5vw;
+}
+#titteli {
+  color: red;
+  font-size: 4vw;
+  line-height: 4.5vw;
+}
+.tabit {
+  order: 3;
+  display: flex;
+  justify-content: space-evenly;
+  margin: 5vw;
+}
+.tabit button {
+  background-color: black;
+  border: none;
+  color: beige;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 7vw;
+  font-family: "Anton", sans-serif;
+  letter-spacing: 0.5vw;
+  margin: auto;
+  user-select: none;
+}
+.tabit button:hover {
+  color: red;
+}
+.tabit button.active {
+  color: red;
+}
+.tabcontent {
+  order: 4;
+  display: none;
+  padding: 6px 12px;
+  border-top: none;
+  font-family: "Work Sans", sans-serif;
+  font-weight: 300;
+}
+#profiilikuva {
+  display: flex;
+  align-items: center;
+}
+#omakuva {
+  height: 60vw;
+  width: auto;
+  border-radius: 50%;
+  margin: 1vw;
+}
+a {
+  text-decoration: none;
+  color: black;
+  transition: 0.3s;
+}
+a:hover {
+  color: red;
+}
+.logo {
+  height: 5vw;
+  width: auto;
+}
+#linkit {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 1vw;
+}
+#github_linkki,
+#linkedIn_linkki,
+#twitter_linkki,
+#email_linkki {
+  display: flex;
+  flex-direction: row;
+  background-color: #fbe305;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  margin: 1vw;
+}
+#logo_teksti {
+  font-size: 4.5vw;
+  letter-spacing: 0.1vw;
+  font-family: "Anton", sans-serif;
+  margin: 3vw;
+}
+#veri {
+  position: absolute;
+  display: none;
+}
+#veri2 {
+  position: absolute;
+  height: 100vw;
+  width: auto;
+  z-index: -1;
+}
+#ylabar {
+  display: flex;
+  justify-content: flex-end;
+}
+.differentmode {
+  height: 9vw;
+  width: auto;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: 0.3s;
+}
+#killbill {
+  height: 9vw;
+  width: auto;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+.ylaicon {
+  height: 5vw;
+  width: auto;
+  margin: 1vw;
+  transition: 0.3s;
+}
+.ylaicon:hover {
+  opacity: 0.5;
+}
+#about_me {
+  flex-direction: column;
+}
+#portfolio {
+  flex-direction: column;
+}
+#skills {
+  flex-direction: column;
+}
+
+/* Tausta: */
+progress::-webkit-progress-bar {
+  background-color: #fbe305;
+  width: 100%;
+  border: 1px solid black;
+}
+progress {
+  background-color: #fbe305;
+  border: 1px solid black;
+  width: 100%;
+}
+/* Palkki: */
+::-webkit-progress-value {
+  background-color: red;
+  transition: width 3s;
+  animation-delay: 1s;
+}
+::-moz-progress-bar {
+  background-color: red;
+  transition: padding-bottom 3s;
+  padding-bottom: var(--value);
+  transform-origin: 0 0;
+  transform: rotate(-90deg) translateX(-15px);
+  padding-left: 15px;
+  overflow: 0;
+}
+progress {
+  color: red;
+  overflow: hidden;
+}
+#loppukaneetti {
+  font-style: italic;
+  margin-top: 1vw;
+}
+
+/*TODO: nämä järkevästi puhelin näkymään. */
+#link_buttons {
+  display: none;
+}
+#iconcredit_teksti {
+  display: none;
+}
+#portfolio a {
+  color: red;
+}
+#portfolio a:hover {
+  color: black;
+}
+
+/** setit isommille näytöille **/
+@media screen and (min-width: 600px) {
+  /** tännehän laitetaan vain tekstiä mahdollisesti isommaksi ja mustapalkki pystysuoraan **/
+  #ylabar {
+    height: 3vw;
+    width: 100%;
+  }
+  .differentmode {
+    height: auto;
+  }
+  .ylaicon {
+    height: 2vw;
+  }
+  #killbill {
+    height: auto;
+  }
+  #nimi_ja_titteli {
+    justify-content: flex-start;
+    margin: 0;
+  }
+  #etunimi_sukunimi {
+    font-size: 7vw;
+    margin: 0;
+    margin-left: 1vw;
+  }
+  #titteli {
+    font-size: 2vw;
+    margin: 0;
+    margin-left: 1vw;
+    line-height: 2.3vw;
+  }
+  .koko_flex {
+    flex-direction: column;
+  }
+  #mustapalkki {
+    flex-direction: column;
+    position: absolute;
+    height: 60vw;
+    width: 25%;
+    margin-left: 60%;
+    top: 0%;
+  }
+  #profiilikuva {
+    justify-content: center;
+  }
+  #omakuva {
+    height: 20vw;
+    width: auto;
+    border-radius: 50%;
+    margin: 1em;
+    text-align: center;
+  }
+  #linkit {
+    width: auto;
+  }
+  #logo_teksti {
+    font-size: 1.5vw;
+    margin: 0;
+    margin-left: 1vw;
+  }
+  .logo {
+    height: 3vw;
+  }
+  #github_linkki,
+  #linkedIn_linkki,
+  #twitter_linkki,
+  #email_linkki {
+    height: 5vw;
+    margin-bottom: 0.1vw;
+  }
+  .tabit {
+    margin: 1vw;
+    width: 60%;
+    justify-content: flex-start;
+  }
+  .tabit button {
+    font-size: 2vw;
+    margin: 1vw;
+    text-align: center;
+    padding: 0.5vw;
+    padding-left: 1vw;
+    margin-left: 0;
+  }
+  .tabcontent {
+    font-weight: 400;
+    font-size: large;
+    margin-right: 40%;
+  }
+  #about_me {
+    flex-direction: column;
+  }
+  #portfolio {
+    flex-direction: column;
+  }
+  #skills {
+    flex-direction: unset;
+    flex-wrap: wrap;
+  }
+  .skill {
+    margin: 1vw;
+  }
+
+  #link_buttons {
+    display: flex;
+    justify-content: center;
+  }
+  #sorsa_button,
+  #credits_button {
+    margin: 1vw;
+    font-family: "Anton", sans-serif;
+    font-size: 1vw;
+    cursor: pointer;
+    background-color: #fbe305;
+    border: none;
+    transition: 0.3s;
+  }
+  #sorsa_button:hover {
+    color: red;
+  }
+  #credits_button:hover {
+    color: red;
+  }
+  #credits_button.active {
+    color: red;
+  }
+  #credits_button {
+    user-select: none;
+  }
+  #iconcredit_teksti {
+    display: none;
+    font-size: 0.7vw;
+    font-family: "Work Sans", sans-serif;
+  }
+  #iconcredit_teksti a {
+    margin: 0.5vw;
+    color: red;
+  }
+  #iconcredit_teksti a:hover {
+    color: red;
+    text-decoration: underline;
+  }
+  #veri {
+    display: unset;
+    position: absolute;
+    top: 0;
+    right: 35vw;
+    height: 30vw;
+    width: auto;
+    z-index: -1;
+  }
+  #veri2 {
+    display: none;
+  }
+}

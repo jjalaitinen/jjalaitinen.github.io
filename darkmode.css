@@ -1,0 +1,386 @@
+body {
+  background-color: #111213;
+  overflow-x: hidden;
+  margin: 0;
+}
+#about_button,
+#portfolio_button,
+#skills_button {
+  background-color: black;
+  color: darkgrey;
+  border: none;
+  font-family: "Anton", sans-serif;
+  font-size: x-large;
+  transition: 0.5s;
+}
+#about_button {
+  color: darkgrey;
+}
+#about_button,
+#portfolio_button,
+#skills_button:hover {
+  cursor: pointer;
+}
+
+.koko_flex {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#mustapalkki {
+  order: 2;
+  width: 100%;
+  height: 20%;
+  display: flex;
+  background-color: #212224;
+  margin: 0;
+}
+#nimi_ja_titteli {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 2vw;
+  margin-top: 10vw;
+  font-family: "Anton", sans-serif;
+}
+#etunimi_sukunimi {
+  display: flex;
+  font-size: 25vw;
+  font-weight: bold;
+  line-height: 0.9em;
+  letter-spacing: -0.02em;
+  margin-bottom: 0;
+  margin-top: 5vw;
+  color: #a1a1a1;
+}
+#titteli {
+  color: #35b7ff;
+  font-size: 4vw;
+  line-height: 4.5vw;
+}
+.tabit {
+  order: 3;
+  display: flex;
+  justify-content: space-evenly;
+  margin: 5vw;
+}
+.tabit button {
+  background-color: #212224;
+  border: none;
+  color: #a1a1a1;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 7vw;
+  font-family: "Anton", sans-serif;
+  letter-spacing: 0.5vw;
+  margin: auto;
+  user-select: none;
+}
+.tabit button:hover {
+  color: #35b7ff;
+}
+.tabit button.active {
+  color: #35b7ff;
+}
+.tabcontent {
+  order: 4;
+  display: none;
+  padding: 6px 12px;
+  border-top: none;
+  font-family: "Work Sans", sans-serif;
+  font-weight: 300;
+}
+#profiilikuva {
+  display: flex;
+  align-items: center;
+}
+#omakuva {
+  height: 60vw;
+  width: auto;
+  border-radius: 50%;
+  margin: 1vw;
+  filter: brightness(0.7);
+}
+a {
+  text-decoration: none;
+  color: #a1a1a1;
+  transition: 0.3s;
+}
+a:hover {
+  color: #35b7ff;
+}
+.logo {
+  height: 5vw;
+  width: auto;
+}
+#logo_teksti {
+  font-size: 4.5vw;
+  letter-spacing: 0.1vw;
+  font-family: "Anton", sans-serif;
+  margin: 3vw;
+}
+#linkit {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 1vw;
+}
+#github_linkki,
+#linkedIn_linkki,
+#twitter_linkki,
+#email_linkki {
+  display: flex;
+  flex-direction: row;
+  background-color: #111213;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  margin: 1vw;
+}
+#veri {
+  display: none;
+}
+#veri2 {
+  display: none;
+}
+#ylabar {
+  display: flex;
+  justify-content: flex-end;
+}
+.differentmode {
+  height: 9vw;
+  width: auto;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: 0.3s;
+  color: white;
+}
+#killbill {
+  height: 9vw;
+  width: auto;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+.ylaicon {
+  height: 5vw;
+  width: auto;
+  margin: 1vw;
+  transition: 0.3s;
+}
+.ylaicon:hover {
+  opacity: 0.5;
+}
+
+#portfolio {
+  flex-direction: column;
+}
+#portfolio a {
+  color: #35b7ff;
+}
+#portfolio a:hover {
+  color: #a1a1a1;
+}
+#skills {
+  flex-direction: column;
+}
+
+/* Tausta: */
+progress::-webkit-progress-bar {
+  background-color: #111213;
+  width: 100%;
+  border: 1px solid #a1a1a1;
+}
+progress {
+  background-color: #111213;
+  border: 1px solid #a1a1a1;
+  width: 100%;
+}
+/* Palkki: */
+/* value: */
+::-webkit-progress-value {
+  background-color: #35b7ff;
+  transition: width 3s;
+  animation-delay: 1s;
+}
+::-moz-progress-bar {
+  background-color: #35b7ff;
+  transition: padding-bottom 3s;
+  padding-bottom: var(--value);
+  transform-origin: 0 0;
+  transform: rotate(-90deg) translateX(-15px);
+  padding-left: 15px;
+  overflow: 0;
+}
+progress {
+  color: #35b7ff;
+  overflow: hidden;
+}
+#sorsa_button,
+#credits_button {
+  margin: 1vw;
+  font-family: "Anton", sans-serif;
+  font-size: 1vw;
+  cursor: pointer;
+  background-color: #111213;
+  color: #a1a1a1;
+  border: none;
+  transition: 0.3s;
+}
+#sorsa_button:hover {
+  color: #35b7ff;
+}
+#credits_button:hover {
+  color: #35b7ff;
+}
+#credits_button.active {
+  color: #35b7ff;
+}
+#credits_button {
+  user-select: none;
+}
+#iconcredit_teksti {
+  display: none;
+  font-size: 0.7vw;
+  font-family: "Work Sans", sans-serif;
+}
+#iconcredit_teksti a {
+  margin: 0.5vw;
+}
+#iconcredit_teksti a:hover {
+  color: #35b7ff;
+  text-decoration: underline;
+}
+#loppukaneetti {
+  font-style: italic;
+  margin-top: 1vw;
+}
+#about_me {
+  flex-direction: column;
+  color: #a1a1a1;
+}
+#portfolio {
+  flex-direction: column;
+  color: #a1a1a1;
+}
+#skills {
+  flex-direction: column;
+  color: #a1a1a1;
+}
+/*TODO: nämä järkevästi puhelin näkymään. */
+#link_buttons {
+  display: none;
+}
+#iconcredit_teksti {
+  display: none;
+}
+
+/** setit isommille näytöille **/
+@media screen and (min-width: 600px) {
+  /** tännehän laitetaan vain tekstiä mahdollisesti isommaksi ja mustapalkki pystysuoraan **/
+  #ylabar {
+    height: 3vw;
+    width: 100%;
+  }
+  .differentmode {
+    height: auto;
+  }
+  .ylaicon {
+    height: 2vw;
+  }
+  #killbill {
+    height: auto;
+  }
+  #nimi_ja_titteli {
+    justify-content: flex-start;
+    margin: 0;
+  }
+  #etunimi_sukunimi {
+    font-size: 7vw;
+    margin: 0;
+    margin-left: 1vw;
+  }
+  #titteli {
+    font-size: 2vw;
+    margin: 0;
+    margin-left: 1vw;
+    line-height: 2.3vw;
+  }
+  .koko_flex {
+    flex-direction: column;
+  }
+  #mustapalkki {
+    flex-direction: column;
+    position: absolute;
+    height: 60vw;
+    width: 25%;
+    margin-left: 60%;
+    top: 0%;
+  }
+  #profiilikuva {
+    justify-content: center;
+  }
+  #omakuva {
+    height: 20vw;
+    width: auto;
+    border-radius: 50%;
+    margin: 1em;
+    text-align: center;
+  }
+  #linkit {
+    width: auto;
+  }
+  #logo_teksti {
+    font-size: 1.5vw;
+    margin: 0;
+    margin-left: 1vw;
+  }
+  .logo {
+    height: 3vw;
+  }
+  #github_linkki,
+  #linkedIn_linkki,
+  #twitter_linkki,
+  #email_linkki {
+    height: 5vw;
+    margin-bottom: 0.1vw;
+  }
+  .tabit {
+    margin: 1vw;
+    width: 60%;
+    justify-content: flex-start;
+  }
+  .tabit button {
+    font-size: 2vw;
+    margin: 1vw;
+    text-align: center;
+    padding: 0.5vw;
+    padding-left: 1vw;
+    margin-left: 0;
+  }
+  .tabcontent {
+    font-weight: 400;
+    font-size: large;
+    margin-right: 40%;
+  }
+  #about_me {
+    flex-direction: column;
+  }
+  #portfolio {
+    flex-direction: column;
+  }
+  #skills {
+    flex-direction: unset;
+    flex-wrap: wrap;
+  }
+  .skill {
+    margin: 1vw;
+  }
+  #link_buttons {
+    display: flex;
+    justify-content: center;
+  }
+}

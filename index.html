@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="lightmode.css" rel="StyleSheet" type="text/css" id="theme-link"/>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400&display=swap');
+    </style>
+    <script src="script.js"></script>
+    <title>Joona Laitinen</title>
+  </head>
+  <body>
+    <div class="koko_flex">
+      <div id="ylabar">
+        <button class="differentmode" id="lightmode" onclick="enableDifferentMode(event)">
+          <img class="ylaicon" id="kuu" src="./pictures/moon.png" alt="moon">
+        </button>
+        <button id="killbill" onclick="unleashTheBeast(event)">
+          <img class="ylaicon" id="katana" src="./pictures/katana.png" alt="katana">
+        </button>
+      </div>
+      <div id="nimi_ja_titteli">
+        <p id="etunimi_sukunimi">JOONA </br> LAITINEN</p>
+        <p id="titteli"> BACHELOR'S DEGREE STUDENT IN COMPUTER SCIENCE</br> @ UNIVERSITY OF JYVÄSKYLÄ.</p>
+      </div>
+        <img src="./pictures/veri.png" alt="veri" id="veri">
+        <img src="./pictures/veri2.png" alt="veri" id="veri2">
+      <div class="tabit">
+        <button class="tab_linkki" onclick="clickHandle(event, 'about_me')">ABOUT</button>
+        <button class="tab_linkki" onclick="clickHandle(event, 'portfolio')">PORTFOLIO</button>
+        <button class="tab_linkki" onclick="clickHandle(event, 'skills')">SKILLS</button>
+      </div>
+      <div id="about_me" class="tabcontent">
+        <h2>Hello people!</h2> 
+          <p>I am 23 years old computer science student living in Jyväskylä, Finland.
+          Born and raised in Helsinki and a proud alumnus of Oulunkylän yhteiskoulu.<br>
+          Currently working on my bachelor's thesis about computational thinking and its challenges.
+          As a university student my intrests are pretty much in programming and educational technology. My minor is in educational
+          sciences and I am studying to have a competence to teach information technology. I speak Finnish as my native language and my
+          English is fluent together with good skills in Swedish.<br>
+          I feel confident around computers and 
+          programming is one of my hobbies in my spare time. I am also very much into listening music, playing sports and having beer
+          with friends. In fact I own around 200 vinyl records. Also being in the kitchen is very close to my heart.
+          <br>
+          Right now I'm looking for a place to work for summer. Everything in the field of information technology intrests me. More
+          about my skills and done work is found in sections "porfolio" and "skills".
+        </p>
+      </div>
+      <div id="portfolio" class="tabcontent">
+        <h2>Educational <span>(part of me)</span></h2>
+          <p>As I mentioned in About-section, I'm very interested in educational part of information technology. 
+            One is able to read my thoughts about teaching and being a teacher from <a href="https://peda.net/p/laitjoo/prope-sivusto"><b>here</b></a>.
+            </br>
+            My first time as a student teacher is happening this March (2022).
+            All of my courses within teacher studies have been completed with very good grades so far.
+          </p>
+        <h2>Programmer <span>(part of me)</span></h2>
+          <p>
+            Alongside teaching stuff I'm also very much into programming things I might think as useful. Most of my work is available and can be seen
+            in my <a href="https://github.com/jjalaitinen"><b>GitHub</b></a>. There are plenty of work I've done in school and my personal projects.
+            <br>
+            My largest single project was in last autumn. Me and three other computer science students from Jyväskylä University 
+            developed a large software for modeling usage of citybikes (Alepafillari) in Helsinki. For more information about this project one can contact me.
+            <br>
+            Me and few of my friends are at the moment programming a Discord bot and project as well as my contribution to it can be seen <a href="https://github.com/tupepi/lanttupoika"><b>here</b></a>.
+            <br> <br>
+            In University I've completed programming-oriented courses with laudable grades.
+            <br><br>
+            Programming 1 (C#) - 4
+            <br>
+            Programming 2 (Java) - 4
+            <br>
+            Programming basics in Helsinki University MOOC (Java) - 5
+            <br>
+            Algorithms 1 (Java) - 4
+            <br>
+            Algorithms 2 (Java) - 3 
+            <br>
+            Databases and data management (SQL)  - 3
+            <br>
+            Software security basics (Python, Java) - 4
+
+          </p>
+          <h2>Work history</h2>
+          <p> I've worked in many different places and I have experience in many different fields. I'm still lacking in my own field of work and looking for that kind of a job.</p>
+          <a href="./cv_jl.pdf"><h4>CV</h4></a>
+      </div>
+      <div id="skills" class="tabcontent">
+        <div class="skill" id="java"> 
+          <h3>Java</h3>
+          <p>
+            Considering this as a one of the first languages I learned. Basics from Helsinki and advanced skills via Programming 2 course 
+            in Jyväskylä. I have also used Java as a main programming language in Algorithms courses.
+          </p>
+          <progress value="0" max="100"></progress> <span>Good</span>
+        </div>
+        <div class="skill" id="python">
+          <h3>Python</h3>
+          <p>
+            With Python I completed software security basics course in Jyväskylä and I have used it for a programming language on my spare time.
+            It's also one of the languages we used in our group project last autumn. Flask development became also familiar during that.
+          </p>
+          <progress value="0" max="100"></progress> <span>Very good</span>
+        </div>
+        <div class="skill" id="js">
+          <h3>JavaScript</h3>
+          <p>
+            One of the hardest course for me was with JavaScript, Web UI-design. But I managed well and since then JavaScript has been easier.
+            JavaScript had also a huge impact in our group project since about 60% of its source code is .js. We worked with leaflet, AJAX and
+            jQuery.
+          </p>
+          <progress value="0" max="100"></progress> <span>Very good</span>
+        </div>
+        <div class="skill" id="c#">
+          <h3>C#</h3>
+          <p>
+            Just to mention I have also worked with C#. My first Programming course here in Jyväskylä was with C# and I've learned the consepts of
+            programming with it. Also my first bigger project, a videogame using Jypeli-library is wirtten in C#.
+          </p>
+          <progress value="0" max="100"></progress> <span>Advanced beginner</span>
+        </div>
+        <div class="skill" id="html_css">
+          <h3>HTML & CSS</h3>
+          <p>
+            I consider my skills in this section very good since I have had to struggle with these a lot. During the group project, studies and own
+            projects I've encountered need of these skills. I count in also animation, responsiveness, different elements and UI.
+          </p>
+          <progress value="0" max="100"></progress> <span>Very good</span>
+        </div>
+        <div class="skill" id="sql_db">
+          <h3>SQL and databases</h3>
+          <p>
+            Basics of databases and SQL are also in my back pocket when needed. In the Alepafillari project we had to process a lot of open data from
+            HSL to visualize the usage of citybikes.  
+          </p>
+          <progress value="0" max="100"></progress> <span>Good</span>
+        </div>
+        <div class="skill" id="general">
+          <h3>General development and IT-skills</h3>
+          <p>
+            For example using Git, Scurm type of development, working in terminal, handling algorithms. 
+            I'm most confident with Windows environment (CMD) but working with Linux is familiar too (Terminal). Git is familiar from many different occasions and
+            I've used SVN also as a revision control. Scrum-ish development is well-known from the project course and I've studied a whole course about
+            developing information systems. Office tools and basic IT-skills are - of course - up to date.
+          </p>
+          <progress value="0" max="100"></progress> <span>Very good</span>
+        </div>
+        <div class="skill" id="edu">
+          <h3>Educational technology</h3>
+          <p>
+            My minor. I am completely smitten with educational side of IT. Actually wanting to make world a better place by teaching people more about
+            computers and possibilities one can have with them. I still have much to learn yet even greater intrest in it.
+          </p>
+          <progress value="0" max="100"></progress> <span>Very good</span>
+        </div>
+        <div class="skill" id="social">
+          <h3>Social skills and eagerness to learn</h3>
+          <p>
+            As a usual stereotype one can see basic IT-student nerdish-like quiet person but I'm not the same. I'm 
+            fast to learn new things and adapt to new environments and protocols. I aim to be ready to tackle obsticles to achieve the better solution. 
+          </p>
+          <progress value="0" max="100"></progress> <span>Excellent</span>
+        </div>
+        <div id="loppukaneetti">
+          <hr>
+          <p>
+            Also keep in mind that these graphs are just my thoughts about my skill level. Skills should not anyways be modelled by percentages.
+            I just wondered that it would be a nice way to fill up my site. After all humans tend to enjoy watching graphs to please their minds. Of
+            course it's hard to evaluate yourself but yet important skill that I want to get better at.
+          </p>
+        </div>
+      </div>
+    <div id="mustapalkki">
+        <div id="profiilikuva">
+            <img id="omakuva" src="./pictures/vv_joona2.jpg" />
+        </div>
+        <div id="linkit">
+            <a href="https://github.com/jjalaitinen">
+              <div id="github_linkki">
+                <img class="logo" id="github_logo" src="./pictures/github_logo.png">
+                <p id="logo_teksti">GitHub</p>
+              </div>
+            </a>
+            <a href="https://www.linkedin.com/in/joona-laitinen-17094222b/">
+              <div id="linkedIn_linkki">
+                  <img class="logo" id="linkedIn_logo" src="./pictures/li_logo.png">
+                  <p id="logo_teksti">LinkedIn</p>
+              </div>
+            </a>
+            <a href="https://twitter.com/joneslaitinen">
+              <div id="twitter_linkki">
+                  <img class="logo" id="twitter_logo" src="./pictures/twitter_logo.png">
+                  <p id="logo_teksti">Twitter</p>
+              </div>
+            </a>
+            <a href="mailto:joona.laitinen27@hotmail.com">
+              <div id="email_linkki">
+                  <img class="logo" id="email_logo" src="./pictures/mail_logo.png">
+                  <p id="logo_teksti">EMAIL</p>
+              </div>
+            </a>
+        </div>
+         <div id="link_buttons">
+              <a href="https://github.com/jjalaitinen/joonalaitinen.github.io"><button id="sorsa_button">Source code</button></a>
+              <button class="" id="credits_button" onclick="naytaCreditit()">Icon credits</button>
+         </div>
+         <div id="iconcredit_teksti">
+              <a href="https://www.flaticon.com/free-icons/email" title="email icons">Email icons created by Freepik - Flaticon</a>
+              <a href="https://www.flaticon.com/free-icons/katana" title="katana icons">Katana icons created by istar_design_bureau - Flaticon</a>
+              <a href="https://www.flaticon.com/free-icons/moon" title="moon icons">Moon icons created by iconixar - Flaticon</a>
+              <a href="https://www.flaticon.com/free-icons/sun" title="sun icons">Sun icons created by Good Ware - Flaticon</a>
+         </div>
+    </div>
+    </div>
+  </body>
+</html>
