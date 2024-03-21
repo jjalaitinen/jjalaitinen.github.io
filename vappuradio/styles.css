@@ -1,0 +1,90 @@
+body {
+  background-color: black !important;
+}
+.container {
+  background-color: #f9f6ef;
+  padding-bottom: 1vw;
+}
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 11%;
+  border-radius: 5%;
+  width: 50%;
+}
+#eka_puolikas {
+  width: 100%;
+  border-radius: 12px;
+}
+#toka_puolikas {
+  width: 100%;
+  border-radius: 12px;
+}
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 0 !important;
+}
+li {
+  margin-left: auto;
+  margin-right: auto;
+  font-family: "Quattrocento", serif;
+}
+ul > li:nth-child(odd) {
+  font-weight: bold !important;
+}
+​ #vuosikymmen {
+  font-weight: bold;
+}
+h1,
+h2 {
+  text-align: center;
+  font-family: "Oswald", sans-serif;
+}
+span {
+  font-family: "Oswald", sans-serif;
+  font-size: x-large;
+}
+p {
+  font-family: "Quattrocento", serif;
+  text-align: center;
+}
+#toinen_osa {
+  color: red;
+}
+
+@media screen and (max-width: 900px) {
+  img {
+    width: 90%;
+  }
+  #eka_puolikas {
+    padding: 5px;
+    border-radius: 12px;
+  }
+  #toka_puolikas {
+    padding: 5px;
+    border-radius: 12px;
+  }
+}
+@media screen and (min-width: 600px) {
+  p {
+    margin-left: 25%;
+    margin-right: 25%;
+  }
+  ul {
+    margin-left: 25%;
+  }
+  iframe {
+    width: 50%;
+    margin-left: 25%;
+  }
+  #eka_puolikas {
+    width: 50%;
+    margin-left: 25%;
+  }
+  #toka_puolikas {
+    width: 50%;
+    margin-left: 25%;
+  }
+}
