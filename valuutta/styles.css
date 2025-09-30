@@ -1,0 +1,54 @@
+html {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: system-ui;
+  line-height: 1.5;
+  font-size: 1.5rem;
+}
+
+#sailio {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 2vw;
+  margin-top: 10vw;
+}
+
+#vasen {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+}
+
+#oikea {
+  display: flex;
+  font-size: 2rem;
+}
+
+input {
+  height: max-content;
+  font-size: 1.5rem;
+}
+
+a:hover {
+  color: gray;
+  cursor: pointer;
+  transition: 0.5s;
+}
+
+a {
+  all: unset;
+}
+
+footer {
+  position: fixed;
+  bottom: 1%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vw;
+  font-size: 1rem;
+}
