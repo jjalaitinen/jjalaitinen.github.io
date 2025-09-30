@@ -15,8 +15,6 @@ body {
   flex-direction: column;
   gap: 2vw;
   margin-top: 10vw;
-  margin-left: 2vw;
-  margin-right: 2vw;
 }
 
 #vasen {
@@ -54,4 +52,5 @@ footer {
   gap: 1vw;
   font-size: 1rem;
 }
+
 
