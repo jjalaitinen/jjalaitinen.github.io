@@ -20,6 +20,7 @@ body {
 #vasen {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.5vw;
 }
 
@@ -31,6 +32,7 @@ body {
 input {
   height: max-content;
   font-size: 1.5rem;
+  width: 70%;
 }
 
 a:hover {
@@ -52,5 +54,6 @@ footer {
   gap: 1vw;
   font-size: 1rem;
 }
+
 
 
