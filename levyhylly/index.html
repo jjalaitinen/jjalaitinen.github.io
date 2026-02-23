@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Levyhylly – Cover Flow</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <div class="logo">💿</div>
+        <div class="titleText">
+          <h1>Levyhylly</h1>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input id="q" class="input" placeholder="Hae…" autocomplete="off" />
+
+        <select id="sort" class="input select" aria-label="Lajittelu">
+          <option value="artist_asc">Artisti (A–Ö)</option>
+          <option value="year_asc">Vuosi (vanhin → uusin)</option>
+          <option value="year_desc">Vuosi (uusin → vanhin)</option>
+          <option value="title_asc">Albumi (A–Ö)</option>
+        </select>
+
+        <button id="prev" class="btn" type="button" aria-label="Edellinen">
+          ←
+        </button>
+        <button id="next" class="btn" type="button" aria-label="Seuraava">
+          →
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div id="stage" class="stage" aria-label="Cover flow">
+        <!-- YLÄBAR: count + sijainti -->
+        <div class="topbar" aria-hidden="true">
+          <div class="topbarPill">
+            <span id="count">—</span>
+            <span class="dot">•</span>
+            <span id="pos">0/0</span>
+          </div>
+        </div>
+
+        <div id="flow" class="flow"></div>
+      </div>
+    </main>
+
+    <!-- ALABAR: vain albumin metat -->
+    <div class="info">
+      <div class="pill">
+        <div class="meta">
+          <div class="line1" id="title">—</div>
+          <div class="line2" id="artist">—</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
