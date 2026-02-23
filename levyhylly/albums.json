@@ -148,5 +148,11 @@
     "title": "Doris",
     "year": 1985,
     "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/J_Karjalainen_Mustat_Lasit_Doris.jpg"
+  },
+  {
+    "artist": "Lasten Hautausmaa",
+    "title": "IV",
+    "year": 2020,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Lasten_Hautausmaa_IV.jpg"
   }
 ]
