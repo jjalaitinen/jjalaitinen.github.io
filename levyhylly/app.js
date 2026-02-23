@@ -1,6 +1,6 @@
 const DATA_URL = "./albums.json";
 
-// Adaptive virtualisointi: mobiilissa vähemmän kansia kerralla
+// Adaptive virtualisointi
 const WINDOW_RADIUS_DESKTOP = 9; // max 19
 const WINDOW_RADIUS_MOBILE = 5; // max 11
 
@@ -40,7 +40,6 @@ function windowRadius() {
 }
 
 function prefetchRadius() {
-  // jos kuvat on pieniä, ei kannata ylisuuresti prefetchailla mobiilissa
   return isMobile() ? 4 : 3;
 }
 
@@ -212,7 +211,6 @@ function render() {
     btn.type = "button";
     btn.dataset.i = String(i);
 
-    // Aseta sama URL CSS-muuttujaan heijastusta varten (ei toista img:tä)
     btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
 
     btn.innerHTML = `
@@ -228,7 +226,6 @@ function render() {
 
     const img = btn.querySelector("img");
 
-    // Aktiivinen kiireellisenä
     img.loading = i === index ? "eager" : "lazy";
     if (i === index) img.fetchPriority = "high";
 
@@ -319,6 +316,25 @@ function prefetchNearby(initial = false) {
   else scheduleIdle(run);
 }
 
+/* MUUTOS: iOS double-tap zoom guard (vain mobiilissa)
+   Estää “vahingossa zoomaa” -tapaukset, kun napauttaa nopeasti peräkkäin. */
+(function preventDoubleTapZoom() {
+  let lastTouchEnd = 0;
+
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      if (!isMobile()) return;
+      const now = Date.now();
+      if (now - lastTouchEnd <= 350) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    },
+    { passive: false },
+  );
+})();
+
 /* Desktop: klikkaa myös next/prev aktiivisesta */
 function isDesktopPointer() {
   return window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
@@ -349,7 +365,7 @@ stage.addEventListener("click", (ev) => {
   else if (dx < -dead) jump(-1);
 });
 
-/* Swipe (jätetään, mutta et ole riippuvainen siitä) */
+/* Swipe (jätetään) */
 function swipeThresholdPx() {
   const w = Math.max(
     320,
@@ -445,7 +461,7 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-/* Breakpoint-vaihto -> ikkuna muuttuu */
+/* Breakpoint-vaihto */
 window.addEventListener(
   "resize",
   () => {

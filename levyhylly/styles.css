@@ -15,7 +15,7 @@
 
   --headerH: 74px;
   --infoH: 78px;
-  --mobileCtrlsH: 0px; /* desktopissa ei */
+  --mobileCtrlsH: 0px;
 }
 
 * {
@@ -48,6 +48,11 @@ body {
     linear-gradient(to bottom, var(--bg1), var(--bg2));
   overflow: hidden;
   overscroll-behavior: none;
+
+  /* MUUTOS: vähennä iOS “valitse teksti / callout” -häsläystä */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 /* ---------- Desktop header ---------- */
@@ -121,8 +126,10 @@ body {
   min-height: 44px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   transition: transform 0.08s ease;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
+
+  /* MUUTOS: estä double-tap zoom monissa selaimissa */
+  touch-action: manipulation;
 }
 .btn:active {
   transform: translateY(1px);
@@ -179,11 +186,8 @@ body {
   height: min(700px, 100%);
   perspective: var(--perspective);
 
+  /* swipe / drag */
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-
   transform: translateZ(0);
 }
 
@@ -233,6 +237,9 @@ body {
   outline: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+
+  /* MUUTOS: estää double-tap zoomia osittain */
+  touch-action: manipulation;
 }
 
 .cover {
@@ -246,7 +253,6 @@ body {
   background: rgba(15, 23, 42, 0.55);
 }
 
-/* placeholder shimmer (vain kun ei loaded) */
 .cover::before {
   content: "";
   position: absolute;
@@ -297,7 +303,6 @@ body {
   );
 }
 
-/* Reflection ilman toista <img>: käytetään samaa URL:ia taustana */
 .reflection {
   pointer-events: none;
   position: absolute;
@@ -433,6 +438,9 @@ body {
     line-height: 1;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     -webkit-tap-highlight-color: transparent;
+
+    /* MUUTOS: auttaa double-tap zoomiin */
+    touch-action: manipulation;
   }
   .mBtn:disabled {
     opacity: 0.45;

@@ -64,5 +64,89 @@
     "title": "Hyvästi Masentava Maapallo",
     "year": 2025,
     "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/PAA-KII-Hyvasti-Masentava-Maapallo.-600x600-1.webp"
+  },
+  {
+    "artist": "Pave Maijanen",
+    "title": "Palava Sydän",
+    "year": 1985,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Pave_Maijanen_Palava_Sydan.jpg"
+  },
+  {
+    "artist": "Juice Leskinen",
+    "title": "Sinä",
+    "year": 1990,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Juice_Leskinen_Sina.png"
+  },
+  {
+    "artist": "Pää Kii",
+    "title": "Pää Kii",
+    "year": 2012,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Paakii_Paakii.webp"
+  },
+  {
+    "artist": "Maustetytöt",
+    "title": "Kaikki Tiet Vievät Peltolaan",
+    "year": 2019,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Maustetytot_Kaikki_Tiet_Vievat_Peltolaan.jpg"
+  },
+  {
+    "artist": "Lapsuus",
+    "title": "Kaikki Menee Mustaksi...",
+    "year": 2020,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Lapsuus_Kaikki_Menee_Mustaksi.png"
+  },
+  {
+    "artist": "Eppu Normaali",
+    "title": "Valkoinen Kupla",
+    "year": 1986,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Eppu_Normaali_Valkoinen_Kupla.jpg"
+  },
+  {
+    "artist": "Eppu Normaali",
+    "title": "Historian Suurmiehiä",
+    "year": 1990,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Eppu_Normaali_Historian_Suurmiehia.jpg"
+  },
+  {
+    "artist": "Kaseva",
+    "title": "Silloin kun",
+    "year": 1974,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Kaseva_Silloin_Kun.jpg"
+  },
+  {
+    "artist": "PMMP",
+    "title": "Leskiäidin tyttäret",
+    "year": 2006,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Pmmp_Leskiaidin_Tyttaret.jpg"
+  },
+  {
+    "artist": "Kaseva",
+    "title": "Kun maailma elää",
+    "year": 1976,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Kaseva_Kun_Maailma_Elaa.jpg"
+  },
+  {
+    "artist": "Tuomari Nurmio",
+    "title": "Hullu Puutarhuri",
+    "year": 1992,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Tuomari_Nurmio_Hullu_Puutarhuri.jpg"
+  },
+  {
+    "artist": "Maustetytöt",
+    "title": "Eivät enkelitkään ilman siipiä lennä",
+    "year": 2020,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Maustetytot_Eivat_Enkelitkaan_Ilman_Siipia_Lenna.jpg"
+  },
+  {
+    "artist": "Freeman",
+    "title": "Freeman",
+    "year": 1976,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/Freeman_Freeman.jpg"
+  },
+  {
+    "artist": "J. Karjalainen & Mustat Lasit",
+    "title": "Doris",
+    "year": 1985,
+    "coverUrl": "https://cdn.jsdelivr.net/gh/jjalaitinen/album_covers@main/albumi_kannet/J_Karjalainen_Mustat_Lasit_Doris.jpg"
   }
 ]

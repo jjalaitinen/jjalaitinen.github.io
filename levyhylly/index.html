@@ -2,13 +2,15 @@
 <html lang="fi">
   <head>
     <meta charset="utf-8" />
+
+    <!-- MUUTOS: estä zoomaus mobiilissa -->
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
+      content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no"
     />
+
     <title>Levyhylly – Cover Flow</title>
 
-    <!-- Pieni apu ekalle lataukselle (erityisesti mobiilissa) -->
     <link rel="dns-prefetch" href="//www.dropbox.com" />
     <link rel="preconnect" href="https://www.dropbox.com" crossorigin />
 
@@ -56,7 +58,6 @@
       </div>
     </main>
 
-    <!-- MOBIILI: kontrollit kannen ja metan väliin -->
     <div class="mobileControls">
       <button id="mPrev" class="mBtn" type="button" aria-label="Edellinen">
         ←
