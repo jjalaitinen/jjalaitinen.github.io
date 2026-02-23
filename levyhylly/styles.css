@@ -49,7 +49,6 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
 
-  /* MUUTOS: vähennä iOS “valitse teksti / callout” -häsläystä */
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   user-select: none;
@@ -128,7 +127,7 @@ body {
   transition: transform 0.08s ease;
   -webkit-tap-highlight-color: transparent;
 
-  /* MUUTOS: estä double-tap zoom monissa selaimissa */
+  /* ok napeille */
   touch-action: manipulation;
 }
 .btn:active {
@@ -186,7 +185,7 @@ body {
   height: min(700px, 100%);
   perspective: var(--perspective);
 
-  /* swipe / drag */
+  /* drag handled by pointer events */
   touch-action: none;
   transform: translateZ(0);
 }
@@ -235,11 +234,14 @@ body {
   background: transparent;
   border-radius: 22px;
   outline: none;
-  cursor: pointer;
+  cursor: grab;
   -webkit-tap-highlight-color: transparent;
 
-  /* MUUTOS: estää double-tap zoomia osittain */
-  touch-action: manipulation;
+  /* MUUTOS: tärkein — mahdollistaa drag kansien päältä (iOS) */
+  touch-action: none;
+}
+.album:active {
+  cursor: grabbing;
 }
 
 .cover {
@@ -287,6 +289,10 @@ body {
   display: block;
   opacity: 0;
   transition: opacity 0.18s ease;
+
+  /* MUUTOS: ettei img “syö” eventtejä / valintoja */
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 .album.loaded .cover img {
   opacity: 1;
@@ -439,7 +445,6 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     -webkit-tap-highlight-color: transparent;
 
-    /* MUUTOS: auttaa double-tap zoomiin */
     touch-action: manipulation;
   }
   .mBtn:disabled {

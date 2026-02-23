@@ -37,6 +37,24 @@ let renderedEnd = -1;
 const prefetchCache = new Map();
 const PREFETCH_CACHE_MAX = 120;
 
+// --- iOS-like inertia tuning ---
+const SPRING = 0.16;
+const STOP_EPS = 0.0006;
+
+const FLICK_VELOCITY_MIN = 0.35; // px/ms
+const FLICK_GAIN = 0.015;
+const MAX_FLICK_ALBUMS = 6;
+
+// MUUTOS: snap aggressiivisemmaksi kun ei dragata
+const SNAP_WHEN_CLOSE = 0.06;
+const SNAP_POS_CLOSE = 0.1;
+
+// MUUTOS: drag vs click threshold
+const DRAG_START_PX = 6;
+
+// MUUTOS: “active” kynnys – tämän sisällä kansi on täysin iso
+const ACTIVE_EPS = 0.08;
+
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
@@ -148,7 +166,6 @@ async function load() {
   }
 
   applyFilterAndSort(true);
-  // start animation loop
   requestAnimationFrame(tick);
   prefetchNearby(true);
 }
@@ -171,14 +188,12 @@ function applyFilterAndSort(reset = false) {
     pos = clamp(pos, 0, max);
     target = clamp(target, 0, max);
   } else {
-    // keep current album if possible
     const newIdx = filtered.findIndex((a) => a.id === currentId);
     const keep = newIdx >= 0 ? newIdx : clamp(Math.round(target), 0, max);
     pos = clamp(pos, 0, max);
     target = clamp(keep, 0, max);
   }
 
-  // force rebuild
   renderedCenter = -1;
   rebuildWindowIfNeeded();
   updateMetaUI();
@@ -195,16 +210,13 @@ function nearestAlbum() {
 
 function jump(delta) {
   if (!filtered.length) return;
-  const max = filtered.length - 1;
-  target = clamp(target + delta, 0, max);
-  // snap a bit quicker for button presses
+  target = clamp(Math.round(target + delta), 0, filtered.length - 1);
   prefetchNearby();
 }
 
 function setTargetIndex(i) {
   if (!filtered.length) return;
-  const max = filtered.length - 1;
-  target = clamp(i, 0, max);
+  target = clamp(i, 0, filtered.length - 1);
   prefetchNearby();
 }
 
@@ -233,11 +245,9 @@ function updateMetaUI() {
 }
 
 function scheduleIdle(fn) {
-  if ("requestIdleCallback" in window) {
+  if ("requestIdleCallback" in window)
     window.requestIdleCallback(fn, { timeout: 800 });
-  } else {
-    setTimeout(fn, 60);
-  }
+  else setTimeout(fn, 60);
 }
 
 function prefetchNearby(initial = false) {
@@ -306,7 +316,6 @@ function rebuildWindowIfNeeded() {
     btn.type = "button";
     btn.dataset.i = String(i);
 
-    // reflection uses CSS background
     btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
 
     btn.innerHTML = `
@@ -321,8 +330,6 @@ function rebuildWindowIfNeeded() {
     `;
 
     const img = btn.querySelector("img");
-
-    // load priority for nearest to target
     img.loading = i === center ? "eager" : "lazy";
     if (i === center) img.fetchPriority = "high";
 
@@ -333,7 +340,14 @@ function rebuildWindowIfNeeded() {
     img.src = a.coverUrl;
     img.alt = `${a.artist} – ${a.title}`;
 
-    btn.addEventListener("click", () => setTargetIndex(i));
+    btn.addEventListener("click", (ev) => {
+      if (suppressClick) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
+      setTargetIndex(i);
+    });
 
     flow.appendChild(btn);
   }
@@ -350,7 +364,7 @@ function updateTransforms() {
 }
 
 function applyTransform(el, i, p) {
-  const offset = i - p; // <-- float = smooth
+  const offset = i - p;
   const abs = Math.abs(offset);
   const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
 
@@ -361,14 +375,17 @@ function applyTransform(el, i, p) {
   const zActive = parseFloat(rootStyle.getPropertyValue("--zActive")) || 180;
   const zStep = parseFloat(rootStyle.getPropertyValue("--zStep")) || 42;
 
+  // MUUTOS: active ei vaadi täydellistä nollaa
+  const isActive = abs <= ACTIVE_EPS;
+
   const x = offset * spacing;
   const rotateY = -sign * Math.min(68, abs * curveDeg);
-  const z = abs < 0.0001 ? zActive : -abs * zStep;
+  const z = isActive ? zActive : -abs * zStep;
   const y = abs * 6;
-  const scale = abs < 0.0001 ? 1.0 : 0.86 - abs * 0.05;
+  const scale = isActive ? 1.0 : 0.86 - abs * 0.05;
   const opacity = abs > 6 ? 0 : 1 - abs * 0.12;
   const blur = abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
-  const zIndex = 1000 - Math.round(abs * 1000); // stable ordering while animating
+  const zIndex = 1000 - Math.round(abs * 1000);
 
   el.style.zIndex = String(zIndex);
   el.style.opacity = String(opacity);
@@ -379,15 +396,15 @@ function applyTransform(el, i, p) {
     translateY(${y}px)
     translateZ(${z}px)
     rotateY(${rotateY}deg)
-    rotateX(${abs < 0.0001 ? 0 : tiltDeg}deg)
+    rotateX(${isActive ? 0 : tiltDeg}deg)
     scale(${scale})
   `;
 
   const r = el.querySelector(".reflection");
-  if (r) r.style.opacity = abs < 0.6 ? ".22" : ".14";
+  if (r) r.style.opacity = isActive ? ".22" : ".14";
 }
 
-// Animation loop (spring-ish)
+// Animation loop
 let lastMetaIndex = -1;
 function tick() {
   const n = filtered.length;
@@ -395,13 +412,22 @@ function tick() {
     const max = n - 1;
     target = clamp(target, 0, max);
 
-    // Smoothly move pos -> target
     const diff = target - pos;
-    // damping/speed: tweak to taste
-    pos += diff * 0.14;
+    pos += diff * SPRING;
+    if (Math.abs(diff) < STOP_EPS) pos = target;
 
-    // stop micro-jitter
-    if (Math.abs(diff) < 0.0005) pos = target;
+    // MUUTOS: jos ei dragata, snapataan target kokonaiseksi kun ollaan lähellä
+    if (!dragging) {
+      const rounded = Math.round(target);
+      if (
+        Math.abs(target - rounded) < SNAP_WHEN_CLOSE &&
+        Math.abs(pos - target) < SNAP_POS_CLOSE
+      ) {
+        target = clamp(rounded, 0, max);
+      }
+      // ja kun pos on todella lähellä, lukitaan suoraan targetiin
+      if (Math.abs(pos - target) < 0.001) pos = target;
+    }
 
     rebuildWindowIfNeeded();
     updateTransforms();
@@ -410,7 +436,7 @@ function tick() {
     if (idx !== lastMetaIndex) {
       lastMetaIndex = idx;
       updateMetaUI();
-      prefetchNearby(); // keep near current target warm
+      prefetchNearby();
     }
   } else {
     updateMetaUI();
@@ -423,7 +449,7 @@ function tick() {
    Input handlers
 ---------------------------- */
 
-// Desktop wheel: smooth
+// Wheel smooth
 let wheelAccum = 0;
 let wheelRAF = 0;
 
@@ -433,21 +459,14 @@ stage.addEventListener(
     ev.preventDefault();
     if (!filtered.length) return;
 
-    // Normalize delta: trackpads have small deltas, mouse wheels bigger
-    const dy = ev.deltaY;
-    wheelAccum += dy;
+    wheelAccum += ev.deltaY;
 
     if (!wheelRAF) {
       wheelRAF = requestAnimationFrame(() => {
         wheelRAF = 0;
-        // Convert pixels -> index fraction
-        // Higher divisor = slower movement
-        const step = wheelAccum / 240; // tune
+        const step = wheelAccum / 240;
         wheelAccum = 0;
-
-        if (step !== 0) {
-          target = clamp(target + step, 0, filtered.length - 1);
-        }
+        if (step !== 0) target = clamp(target + step, 0, filtered.length - 1);
       });
     }
   },
@@ -477,45 +496,77 @@ sortSel?.addEventListener("change", () => {
   applyFilterAndSort(false);
 });
 
-// Drag / swipe: continuous
+/* Drag / swipe: continuous + inertia */
 let dragging = false;
 let dragStartX = 0;
 let dragStartTarget = 0;
+
+let lastX = 0;
+let lastT = 0;
+let v = 0;
+
+let dragMoved = false;
+let suppressClick = false;
 
 function getSpacingPx() {
   const rootStyle = getComputedStyle(document.documentElement);
   return parseFloat(rootStyle.getPropertyValue("--spacing")) || 120;
 }
 
+function armSuppressClick() {
+  suppressClick = true;
+  setTimeout(() => {
+    suppressClick = false;
+  }, 250);
+}
+
 stage.addEventListener(
   "pointerdown",
   (ev) => {
     if (!filtered.length) return;
+
     dragging = true;
+    dragMoved = false;
+
     dragStartX = ev.clientX;
     dragStartTarget = target;
+
+    lastX = ev.clientX;
+    lastT = performance.now();
+    v = 0;
+
     stage.setPointerCapture?.(ev.pointerId);
   },
-  { passive: true },
+  { passive: true, capture: true },
 );
 
 stage.addEventListener(
   "pointermove",
   (ev) => {
     if (!dragging) return;
-    const dx = ev.clientX - dragStartX;
 
-    // dx pixels -> index fraction
+    const now = performance.now();
+    const dxTotal = ev.clientX - dragStartX;
+
+    if (!dragMoved && Math.abs(dxTotal) >= DRAG_START_PX) {
+      dragMoved = true;
+      armSuppressClick();
+    }
+
     const spacing = getSpacingPx();
-    const deltaIndex = dx / spacing;
-
-    // dragging right should move to previous album (like old logic),
-    // hence minus:
+    const deltaIndex = dxTotal / spacing;
     target = clamp(
       dragStartTarget - deltaIndex,
       0,
       Math.max(0, filtered.length - 1),
     );
+
+    const dt = Math.max(1, now - lastT);
+    const vx = (ev.clientX - lastX) / dt;
+    v = v * 0.75 + vx * 0.25;
+
+    lastX = ev.clientX;
+    lastT = now;
   },
   { passive: true },
 );
@@ -525,45 +576,30 @@ function endDrag() {
   dragging = false;
   if (!filtered.length) return;
 
-  // snap to nearest album when released
-  target = clamp(Math.round(target), 0, filtered.length - 1);
+  const max = filtered.length - 1;
+
+  const speed = Math.abs(v);
+  if (speed >= FLICK_VELOCITY_MIN) {
+    let fling = -v * (FLICK_GAIN * getSpacingPx());
+    fling = clamp(fling, -MAX_FLICK_ALBUMS, MAX_FLICK_ALBUMS);
+    target = clamp(target + fling, 0, max);
+    armSuppressClick();
+  }
+
+  // MUUTOS: AINA snap lähimpään kun sormi/hiiri nousee
+  target = clamp(Math.round(target), 0, max);
+
   prefetchNearby();
 }
 
 window.addEventListener("pointerup", endDrag, { passive: true });
 window.addEventListener("pointercancel", endDrag, { passive: true });
 
-// Desktop: click side of active to next/prev (kept)
-function isDesktopPointer() {
-  return window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
-}
-stage.addEventListener("click", (ev) => {
-  if (!isDesktopPointer()) return;
-  if (!filtered.length) return;
-
-  const albumEl = ev.target.closest?.(".album");
-  if (albumEl) {
-    const i = Number(albumEl.dataset.i);
-    if (Number.isFinite(i) && i !== nearestIndex()) {
-      setTargetIndex(i);
-      return;
-    }
-  }
-
-  const rect = stage.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const dx = ev.clientX - cx;
-  const dead = Math.max(32, rect.width * 0.06);
-
-  if (dx > dead) jump(1);
-  else if (dx < -dead) jump(-1);
-});
-
 // Responsive changes
 window.addEventListener(
   "resize",
   () => {
-    renderedCenter = -1; // force rebuild with new radius/spacing
+    renderedCenter = -1;
     rebuildWindowIfNeeded();
     prefetchNearby();
   },
