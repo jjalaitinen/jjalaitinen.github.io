@@ -173,14 +173,12 @@ body {
   place-items: center;
 }
 
-/* Stage */
 .stage {
   position: relative;
   width: min(1200px, 96vw);
   height: min(700px, 100%);
   perspective: var(--perspective);
 
-  /* swipe ok, mutta ei pakoteta */
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -245,10 +243,10 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(15, 23, 42, 0.55); /* placeholder tausta */
+  background: rgba(15, 23, 42, 0.55);
 }
 
-/* placeholder shimmer */
+/* placeholder shimmer (vain kun ei loaded) */
 .cover::before {
   content: "";
   position: absolute;
@@ -281,7 +279,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  opacity: 0; /* näkyviin vasta kun load */
+  opacity: 0;
   transition: opacity 0.18s ease;
 }
 .album.loaded .cover img {
@@ -299,6 +297,7 @@ body {
   );
 }
 
+/* Reflection ilman toista <img>: käytetään samaa URL:ia taustana */
 .reflection {
   pointer-events: none;
   position: absolute;
@@ -317,25 +316,25 @@ body {
     transparent
   );
 }
-.reflection .cover {
-  box-shadow: none;
-  background: transparent;
+.reflection .refBg {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background-image: var(--cover-bg);
+  background-size: cover;
+  background-position: center;
 }
 .reflection .fade {
   position: absolute;
   inset: 0;
   background: rgba(2, 6, 23, 0.68);
 }
-.reflection .cover::before {
-  display: none;
-} /* ei shimmeriä heijastukseen */
 
 /* Mobile controls between cover and meta */
 .mobileControls {
   display: none;
 }
 
-/* Bottom meta */
 .info {
   position: fixed;
   left: 0;
@@ -379,11 +378,11 @@ body {
   text-overflow: ellipsis;
 }
 
-/* ---------- Mobile layout ---------- */
+/* ---------- Mobile ---------- */
 @media (max-width: 640px) {
   :root {
-    --headerH: 0px; /* ei yläheaderia */
-    --mobileCtrlsH: 64px; /* varataan tilaa keskikontrolleille */
+    --headerH: 0px;
+    --mobileCtrlsH: 64px;
     --infoH: 74px;
     --size: min(78vw, 340px);
     --spacing: 92px;
@@ -393,6 +392,7 @@ body {
   .appHeader {
     display: none;
   }
+
   .appMain {
     padding-top: 0;
     padding-bottom: calc(
@@ -408,7 +408,6 @@ body {
     padding: 6px 10px;
   }
 
-  /* näytä mobiilikontrollit */
   .mobileControls {
     position: fixed;
     left: 0;
@@ -434,6 +433,9 @@ body {
     line-height: 1;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
     -webkit-tap-highlight-color: transparent;
+  }
+  .mBtn:disabled {
+    opacity: 0.45;
   }
   .mBtn:active {
     transform: translateY(1px);

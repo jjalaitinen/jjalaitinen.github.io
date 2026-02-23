@@ -1,7 +1,8 @@
 const DATA_URL = "./albums.json";
 
-// Virtualisointi
-const WINDOW_RADIUS = 9;
+// Adaptive virtualisointi: mobiilissa vähemmän kansia kerralla
+const WINDOW_RADIUS_DESKTOP = 9; // max 19
+const WINDOW_RADIUS_MOBILE = 5; // max 11
 
 const $ = (sel) => document.querySelector(sel);
 const stage = $("#stage");
@@ -31,14 +32,16 @@ const PREFETCH_CACHE_MAX = 120;
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
-
 function isMobile() {
   return window.matchMedia?.("(max-width: 640px)")?.matches;
 }
+function windowRadius() {
+  return isMobile() ? WINDOW_RADIUS_MOBILE : WINDOW_RADIUS_DESKTOP;
+}
 
 function prefetchRadius() {
-  // mobiilissa isompi “lämpö”, desktopissa pienempi
-  return isMobile() ? 6 : 3;
+  // jos kuvat on pieniä, ei kannata ylisuuresti prefetchailla mobiilissa
+  return isMobile() ? 4 : 3;
 }
 
 function normalizeAlbum(a, i) {
@@ -77,7 +80,6 @@ function applySort(list) {
     if (mode === "year_asc" || mode === "year_desc") {
       const ya = a.year === "" ? 999999 : a.year;
       const yb = b.year === "" ? 999999 : b.year;
-
       const d = ya - yb;
       if (d !== 0) return mode === "year_desc" ? -d : d;
 
@@ -192,17 +194,14 @@ function render() {
     elArtist.textContent = "—";
   }
 
-  if (btnPrev) btnPrev.disabled = index <= 0;
-  if (btnNext) btnNext.disabled = index >= filtered.length - 1;
-  if (mPrev) mPrev.disabled = index <= 0;
-  if (mNext) mNext.disabled = index >= filtered.length - 1;
+  btnPrev && (btnPrev.disabled = index <= 0);
+  btnNext && (btnNext.disabled = index >= filtered.length - 1);
+  mPrev && (mPrev.disabled = index <= 0);
+  mNext && (mNext.disabled = index >= filtered.length - 1);
 
-  const start = clamp(
-    index - WINDOW_RADIUS,
-    0,
-    Math.max(0, filtered.length - 1),
-  );
-  const end = clamp(index + WINDOW_RADIUS, 0, Math.max(0, filtered.length - 1));
+  const R = windowRadius();
+  const start = clamp(index - R, 0, Math.max(0, filtered.length - 1));
+  const end = clamp(index + R, 0, Math.max(0, filtered.length - 1));
 
   flow.innerHTML = "";
 
@@ -213,38 +212,35 @@ function render() {
     btn.type = "button";
     btn.dataset.i = String(i);
 
+    // Aseta sama URL CSS-muuttujaan heijastusta varten (ei toista img:tä)
+    btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
+
     btn.innerHTML = `
       <div class="cover">
         <img alt="" decoding="async" />
         <div class="gloss"></div>
       </div>
       <div class="reflection" aria-hidden="true">
-        <div class="cover"><img alt="" decoding="async" /><div class="gloss"></div></div>
+        <div class="refBg"></div>
         <div class="fade"></div>
       </div>
     `;
 
-    const imgs = btn.querySelectorAll("img");
-    const main = imgs[0];
-    const refl = imgs[1];
+    const img = btn.querySelector("img");
 
-    // aktiivi eager (nopeampi näkyminen)
-    main.loading = i === index ? "eager" : "lazy";
-    refl.loading = i === index ? "eager" : "lazy";
+    // Aktiivinen kiireellisenä
+    img.loading = i === index ? "eager" : "lazy";
+    if (i === index) img.fetchPriority = "high";
 
-    // crossOrigin voi auttaa joissain cachessa, ei pakollinen:
-    // main.crossOrigin = 'anonymous';
-
-    // load-class placeholderille
     const markLoaded = () => btn.classList.add("loaded");
-    main.addEventListener("load", markLoaded, { once: true });
-    main.addEventListener("error", markLoaded, { once: true }); // poista shimmer vaikka fail
+    img.addEventListener("load", markLoaded, { once: true });
+    img.addEventListener("error", markLoaded, { once: true });
 
-    main.src = a.coverUrl;
-    main.alt = `${a.artist} – ${a.title}`;
-    refl.src = a.coverUrl;
+    img.src = a.coverUrl;
+    img.alt = `${a.artist} – ${a.title}`;
 
     btn.addEventListener("click", () => setActive(i));
+
     flow.appendChild(btn);
     applyTransform(btn, i, index);
   }
@@ -307,10 +303,10 @@ function prefetchNearby(initial = false) {
       if (!url) continue;
       if (prefetchCache.has(url)) continue;
 
-      const img = new Image();
-      img.decoding = "async";
-      img.src = url;
-      prefetchCache.set(url, img);
+      const im = new Image();
+      im.decoding = "async";
+      im.src = url;
+      prefetchCache.set(url, im);
 
       if (prefetchCache.size > PREFETCH_CACHE_MAX) {
         const firstKey = prefetchCache.keys().next().value;
@@ -319,7 +315,6 @@ function prefetchNearby(initial = false) {
     }
   };
 
-  // initial prefetch heti, muuten idle
   if (initial) run();
   else scheduleIdle(run);
 }
@@ -354,7 +349,7 @@ stage.addEventListener("click", (ev) => {
   else if (dx < -dead) jump(-1);
 });
 
-/* Swipe (pidetään, mutta et ole riippuvainen siitä) */
+/* Swipe (jätetään, mutta et ole riippuvainen siitä) */
 function swipeThresholdPx() {
   const w = Math.max(
     320,
@@ -450,11 +445,11 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-/* Re-optimoi kun breakpoint vaihtuu */
+/* Breakpoint-vaihto -> ikkuna muuttuu */
 window.addEventListener(
   "resize",
   () => {
-    // prefetch voi muuttua mobiili/desktop välillä
+    render();
     prefetchNearby();
   },
   { passive: true },
