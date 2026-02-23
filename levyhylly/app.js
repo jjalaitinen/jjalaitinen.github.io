@@ -1,12 +1,8 @@
-// Aseta tähän sun JSON-URL tai polku (sama domain / CORS sallittu):
 const DATA_URL = "./albums.json";
 
-// JSON: array-objekteja:
-// { "artist": "...", "title": "...", "year": 2013, "coverUrl": "https://..." }
-
-// Virtualisointi: montako kantta renderöidään DOMiin kerralla (±N + keskellä)
-const WINDOW_RADIUS = 9; // 9 => max 19 kpl
-const PREFETCH_RADIUS = 3; // esilataa ±3
+// Virtualisointi
+const WINDOW_RADIUS = 9; // max 19 kantta DOMissa
+const PREFETCH_RADIUS = 3;
 
 const $ = (sel) => document.querySelector(sel);
 const stage = $("#stage");
@@ -51,6 +47,7 @@ function compareText(a, b) {
 }
 
 function applySort(list) {
+  // Mobiilissa halutaan “ei ylimääräistä” => oletus artist_asc, eikä pakoteta UI:ta
   const mode = sortSel?.value || "artist_asc";
   const arr = [...list];
 
@@ -78,7 +75,6 @@ function applySort(list) {
       return compareText(a.title, b.title);
     }
 
-    // title_asc
     const c = compareText(a.title, b.title);
     if (c) return c;
     return compareText(a.artist, b.artist);
@@ -139,7 +135,7 @@ async function load() {
 function applyFilterAndSort() {
   const activeIdBefore = filtered[index]?.id;
 
-  const term = q.value.trim().toLowerCase();
+  const term = (q?.value || "").trim().toLowerCase();
   const base = !term
     ? all
     : all.filter((a) =>
@@ -172,11 +168,9 @@ function setActive(i) {
 function render() {
   const active = filtered[index];
 
-  // YLÄ: count + sijainti
   elCount.textContent = `${filtered.length} levyä`;
   elPos.textContent = `${filtered.length ? index + 1 : 0}/${filtered.length}`;
 
-  // ALA: nimi + vuosi, artisti
   if (active) {
     elTitle.textContent = active.year
       ? `${active.title} (${active.year})`
@@ -187,8 +181,8 @@ function render() {
     elArtist.textContent = "—";
   }
 
-  btnPrev.disabled = index <= 0;
-  btnNext.disabled = index >= filtered.length - 1;
+  if (btnPrev) btnPrev.disabled = index <= 0;
+  if (btnNext) btnNext.disabled = index >= filtered.length - 1;
 
   const start = clamp(
     index - WINDOW_RADIUS,
@@ -197,7 +191,6 @@ function render() {
   );
   const end = clamp(index + WINDOW_RADIUS, 0, Math.max(0, filtered.length - 1));
 
-  // Virtualisointi: max ~19 elementtiä DOMiin
   flow.innerHTML = "";
 
   for (let i = start; i <= end; i++) {
@@ -226,9 +219,7 @@ function render() {
     imgs[0].loading = i === index ? "eager" : "lazy";
     imgs[1].loading = i === index ? "eager" : "lazy";
 
-    // klik sivukansi -> valitse se
     btn.addEventListener("click", () => setActive(i));
-
     flow.appendChild(btn);
     applyTransform(btn, i, index);
   }
@@ -311,9 +302,7 @@ function prefetchNearby() {
   });
 }
 
-/* ---------------------------
-   Desktop: klikkaa myös seuraavaa/edellistä (aktiivisesta kannesta)
----------------------------- */
+/* Desktop: klikkaa myös seuraava/edellinen aktiivisesta */
 function isDesktopPointer() {
   return window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
 }
@@ -326,7 +315,6 @@ stage.addEventListener("click", (ev) => {
   const rect = stage.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const dx = ev.clientX - cx;
-
   const dead = Math.max(32, rect.width * 0.06);
 
   if (albumEl) {
@@ -335,20 +323,16 @@ stage.addEventListener("click", (ev) => {
       setActive(i);
       return;
     }
-    // aktiivinen: klikkaa vasen/oikea -> prev/next
     if (dx > dead) jump(1);
     else if (dx < -dead) jump(-1);
     return;
   }
 
-  // tausta: sama logiikka
   if (dx > dead) jump(1);
   else if (dx < -dead) jump(-1);
 });
 
-/* ---------------------------
-   Swipe / drag (mobiili)
----------------------------- */
+/* Swipe / drag: tärkein mobiilissa */
 function swipeThresholdPx() {
   const w = Math.max(
     320,
@@ -410,7 +394,6 @@ window.addEventListener(
     if (!down) return;
     down = false;
 
-    // inertia
     const speed = Math.abs(vel);
     let extra = 0;
     if (speed > 0.6) extra = 1;
@@ -424,7 +407,7 @@ window.addEventListener(
   { passive: true },
 );
 
-// Wheel (desktop)
+/* Wheel desktop */
 let wheelLock = false;
 stage.addEventListener(
   "wheel",
@@ -438,23 +421,21 @@ stage.addEventListener(
   { passive: false },
 );
 
-// UI events
-q.addEventListener("input", () => {
+/* UI (desktop) */
+q?.addEventListener("input", () => {
   applyFilterAndSort();
   render();
   prefetchNearby();
 });
-
 sortSel?.addEventListener("change", () => {
   applyFilterAndSort();
   render();
   prefetchNearby();
 });
+btnPrev?.addEventListener("click", () => jump(-1));
+btnNext?.addEventListener("click", () => jump(1));
 
-btnPrev.addEventListener("click", () => jump(-1));
-btnNext.addEventListener("click", () => jump(1));
-
-// Keyboard
+/* Keyboard */
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") jump(-1);
   if (e.key === "ArrowRight") jump(1);
@@ -470,5 +451,4 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// Start
 load();
