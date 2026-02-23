@@ -15,6 +15,7 @@
 
   --headerH: 74px;
   --infoH: 78px;
+  --mobileCtrlsH: 0px; /* desktopissa ei */
 }
 
 * {
@@ -165,7 +166,9 @@ body {
   position: absolute;
   inset: 0;
   padding-top: var(--headerH);
-  padding-bottom: calc(var(--infoH) + env(safe-area-inset-bottom));
+  padding-bottom: calc(
+    var(--infoH) + var(--mobileCtrlsH) + env(safe-area-inset-bottom)
+  );
   display: grid;
   place-items: center;
 }
@@ -177,6 +180,7 @@ body {
   height: min(700px, 100%);
   perspective: var(--perspective);
 
+  /* swipe ok, mutta ei pakoteta */
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -241,6 +245,35 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.55); /* placeholder tausta */
+}
+
+/* placeholder shimmer */
+.cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0)
+  );
+  transform: translateX(-60%);
+  opacity: 0.8;
+  animation: shimmer 1.4s infinite;
+}
+.album.loaded .cover::before {
+  display: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-60%);
+  }
+  100% {
+    transform: translateX(60%);
+  }
 }
 
 .cover img {
@@ -248,6 +281,11 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0; /* näkyviin vasta kun load */
+  transition: opacity 0.18s ease;
+}
+.album.loaded .cover img {
+  opacity: 1;
 }
 
 .gloss {
@@ -281,11 +319,20 @@ body {
 }
 .reflection .cover {
   box-shadow: none;
+  background: transparent;
 }
 .reflection .fade {
   position: absolute;
   inset: 0;
   background: rgba(2, 6, 23, 0.68);
+}
+.reflection .cover::before {
+  display: none;
+} /* ei shimmeriä heijastukseen */
+
+/* Mobile controls between cover and meta */
+.mobileControls {
+  display: none;
 }
 
 /* Bottom meta */
@@ -332,10 +379,11 @@ body {
   text-overflow: ellipsis;
 }
 
-/* ---------- Mobile minimal mode ---------- */
+/* ---------- Mobile layout ---------- */
 @media (max-width: 640px) {
   :root {
-    --headerH: 0px; /* ei headeria */
+    --headerH: 0px; /* ei yläheaderia */
+    --mobileCtrlsH: 64px; /* varataan tilaa keskikontrolleille */
     --infoH: 74px;
     --size: min(78vw, 340px);
     --spacing: 92px;
@@ -344,10 +392,12 @@ body {
 
   .appHeader {
     display: none;
-  } /* piilota kaikki ylimääräinen */
+  }
   .appMain {
     padding-top: 0;
-    padding-bottom: calc(var(--infoH) + env(safe-area-inset-bottom));
+    padding-bottom: calc(
+      var(--infoH) + var(--mobileCtrlsH) + env(safe-area-inset-bottom)
+    );
   }
 
   .topbar {
@@ -356,6 +406,37 @@ body {
   .topbarPill {
     font-size: 12px;
     padding: 6px 10px;
+  }
+
+  /* näytä mobiilikontrollit */
+  .mobileControls {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--infoH) + env(safe-area-inset-bottom));
+    height: var(--mobileCtrlsH);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    pointer-events: auto;
+    z-index: 45;
+  }
+
+  .mBtn {
+    border: 1px solid rgba(31, 41, 55, 0.9);
+    background: rgba(15, 23, 42, 0.7);
+    color: var(--text);
+    width: 56px;
+    height: 44px;
+    border-radius: 16px;
+    font-size: 18px;
+    line-height: 1;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mBtn:active {
+    transform: translateY(1px);
   }
 
   .pill {

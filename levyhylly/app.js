@@ -1,16 +1,19 @@
 const DATA_URL = "./albums.json";
 
 // Virtualisointi
-const WINDOW_RADIUS = 9; // max 19 kantta DOMissa
-const PREFETCH_RADIUS = 3;
+const WINDOW_RADIUS = 9;
 
 const $ = (sel) => document.querySelector(sel);
 const stage = $("#stage");
 const flow = $("#flow");
+
 const q = $("#q");
 const sortSel = $("#sort");
 const btnPrev = $("#prev");
 const btnNext = $("#next");
+
+const mPrev = $("#mPrev");
+const mNext = $("#mNext");
 
 const elCount = $("#count");
 const elPos = $("#pos");
@@ -23,10 +26,19 @@ let index = 0;
 
 // preload cache
 const prefetchCache = new Map();
-const PREFETCH_CACHE_MAX = 80;
+const PREFETCH_CACHE_MAX = 120;
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
+}
+
+function isMobile() {
+  return window.matchMedia?.("(max-width: 640px)")?.matches;
+}
+
+function prefetchRadius() {
+  // mobiilissa isompi “lämpö”, desktopissa pienempi
+  return isMobile() ? 6 : 3;
 }
 
 function normalizeAlbum(a, i) {
@@ -47,7 +59,6 @@ function compareText(a, b) {
 }
 
 function applySort(list) {
-  // Mobiilissa halutaan “ei ylimääräistä” => oletus artist_asc, eikä pakoteta UI:ta
   const mode = sortSel?.value || "artist_asc";
   const arr = [...list];
 
@@ -129,7 +140,7 @@ async function load() {
 
   applyFilterAndSort();
   render();
-  prefetchNearby();
+  prefetchNearby(true);
 }
 
 function applyFilterAndSort() {
@@ -183,6 +194,8 @@ function render() {
 
   if (btnPrev) btnPrev.disabled = index <= 0;
   if (btnNext) btnNext.disabled = index >= filtered.length - 1;
+  if (mPrev) mPrev.disabled = index <= 0;
+  if (mNext) mNext.disabled = index >= filtered.length - 1;
 
   const start = clamp(
     index - WINDOW_RADIUS,
@@ -212,12 +225,24 @@ function render() {
     `;
 
     const imgs = btn.querySelectorAll("img");
-    imgs[0].src = a.coverUrl;
-    imgs[0].alt = `${a.artist} – ${a.title}`;
-    imgs[1].src = a.coverUrl;
+    const main = imgs[0];
+    const refl = imgs[1];
 
-    imgs[0].loading = i === index ? "eager" : "lazy";
-    imgs[1].loading = i === index ? "eager" : "lazy";
+    // aktiivi eager (nopeampi näkyminen)
+    main.loading = i === index ? "eager" : "lazy";
+    refl.loading = i === index ? "eager" : "lazy";
+
+    // crossOrigin voi auttaa joissain cachessa, ei pakollinen:
+    // main.crossOrigin = 'anonymous';
+
+    // load-class placeholderille
+    const markLoaded = () => btn.classList.add("loaded");
+    main.addEventListener("load", markLoaded, { once: true });
+    main.addEventListener("error", markLoaded, { once: true }); // poista shimmer vaikka fail
+
+    main.src = a.coverUrl;
+    main.alt = `${a.artist} – ${a.title}`;
+    refl.src = a.coverUrl;
 
     btn.addEventListener("click", () => setActive(i));
     flow.appendChild(btn);
@@ -259,31 +284,24 @@ function applyTransform(el, i, activeIndex) {
     scale(${scale})
   `;
 
-  const refl = el.querySelector(".reflection");
-  if (refl) refl.style.opacity = offset === 0 ? ".22" : ".14";
+  const r = el.querySelector(".reflection");
+  if (r) r.style.opacity = offset === 0 ? ".22" : ".14";
 }
 
 function scheduleIdle(fn) {
   if ("requestIdleCallback" in window) {
     window.requestIdleCallback(fn, { timeout: 800 });
   } else {
-    setTimeout(fn, 80);
+    setTimeout(fn, 60);
   }
 }
 
-function prefetchNearby() {
-  const start = clamp(
-    index - PREFETCH_RADIUS,
-    0,
-    Math.max(0, filtered.length - 1),
-  );
-  const end = clamp(
-    index + PREFETCH_RADIUS,
-    0,
-    Math.max(0, filtered.length - 1),
-  );
+function prefetchNearby(initial = false) {
+  const radius = prefetchRadius();
+  const start = clamp(index - radius, 0, Math.max(0, filtered.length - 1));
+  const end = clamp(index + radius, 0, Math.max(0, filtered.length - 1));
 
-  scheduleIdle(() => {
+  const run = () => {
     for (let i = start; i <= end; i++) {
       const url = filtered[i]?.coverUrl;
       if (!url) continue;
@@ -299,10 +317,14 @@ function prefetchNearby() {
         prefetchCache.delete(firstKey);
       }
     }
-  });
+  };
+
+  // initial prefetch heti, muuten idle
+  if (initial) run();
+  else scheduleIdle(run);
 }
 
-/* Desktop: klikkaa myös seuraava/edellinen aktiivisesta */
+/* Desktop: klikkaa myös next/prev aktiivisesta */
 function isDesktopPointer() {
   return window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
 }
@@ -332,31 +354,25 @@ stage.addEventListener("click", (ev) => {
   else if (dx < -dead) jump(-1);
 });
 
-/* Swipe / drag: tärkein mobiilissa */
+/* Swipe (pidetään, mutta et ole riippuvainen siitä) */
 function swipeThresholdPx() {
   const w = Math.max(
     320,
     Math.min(900, stage.clientWidth || window.innerWidth),
   );
-  return clamp(Math.round(w * 0.05), 20, 44);
+  return clamp(Math.round(w * 0.06), 26, 56);
 }
 
 let down = false;
 let startX = 0;
-let lastX = 0;
-let lastT = 0;
 let accum = 0;
-let vel = 0;
 
 stage.addEventListener(
   "pointerdown",
   (ev) => {
     down = true;
     startX = ev.clientX;
-    lastX = ev.clientX;
-    lastT = performance.now();
     accum = 0;
-    vel = 0;
     stage.setPointerCapture?.(ev.pointerId);
   },
   { passive: true },
@@ -366,17 +382,9 @@ stage.addEventListener(
   "pointermove",
   (ev) => {
     if (!down) return;
-
-    const now = performance.now();
-    const dx = ev.clientX - lastX;
-    const dt = Math.max(1, now - lastT);
-    vel = dx / dt;
-
-    lastX = ev.clientX;
-    lastT = now;
-
-    accum += ev.clientX - startX;
+    const dx = ev.clientX - startX;
     startX = ev.clientX;
+    accum += dx;
 
     const threshold = swipeThresholdPx();
     if (Math.abs(accum) >= threshold) {
@@ -391,18 +399,7 @@ stage.addEventListener(
 window.addEventListener(
   "pointerup",
   () => {
-    if (!down) return;
     down = false;
-
-    const speed = Math.abs(vel);
-    let extra = 0;
-    if (speed > 0.6) extra = 1;
-    if (speed > 0.9) extra = 2;
-
-    if (extra > 0) {
-      const dir = vel > 0 ? -1 : 1;
-      jump(dir * extra);
-    }
   },
   { passive: true },
 );
@@ -421,7 +418,7 @@ stage.addEventListener(
   { passive: false },
 );
 
-/* UI (desktop) */
+/* UI */
 q?.addEventListener("input", () => {
   applyFilterAndSort();
   render();
@@ -434,6 +431,8 @@ sortSel?.addEventListener("change", () => {
 });
 btnPrev?.addEventListener("click", () => jump(-1));
 btnNext?.addEventListener("click", () => jump(1));
+mPrev?.addEventListener("click", () => jump(-1));
+mNext?.addEventListener("click", () => jump(1));
 
 /* Keyboard */
 window.addEventListener("keydown", (e) => {
@@ -450,5 +449,15 @@ window.addEventListener("keydown", (e) => {
     prefetchNearby();
   }
 });
+
+/* Re-optimoi kun breakpoint vaihtuu */
+window.addEventListener(
+  "resize",
+  () => {
+    // prefetch voi muuttua mobiili/desktop välillä
+    prefetchNearby();
+  },
+  { passive: true },
+);
 
 load();
