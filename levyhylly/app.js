@@ -11,11 +11,12 @@ const $ = (sel) => document.querySelector(sel);
 const stage = $("#stage");
 const flow = $("#flow");
 
-const q = $("#q");
+const q = $("#q"); // desktop search
+const mq = $("#mq"); // mobile search
 const sortSel = $("#sort");
+
 const btnPrev = $("#prev");
 const btnNext = $("#next");
-
 const mPrev = $("#mPrev");
 const mNext = $("#mNext");
 
@@ -27,16 +28,13 @@ const elArtist = $("#artist");
 let all = [];
 let filtered = [];
 
-// Smooth position (float)
 let pos = 0;
 let target = 0;
 
-// Render window bookkeeping
 let renderedCenter = -1;
 let renderedStart = 0;
 let renderedEnd = -1;
 
-// preload cache
 const prefetchCache = new Map();
 const PREFETCH_CACHE_MAX = 120;
 
@@ -44,7 +42,7 @@ const PREFETCH_CACHE_MAX = 120;
 const SPRING = 0.16;
 const STOP_EPS = 0.0006;
 
-const FLICK_VELOCITY_MIN = 0.35; // px/ms
+const FLICK_VELOCITY_MIN = 0.35;
 const FLICK_GAIN = 0.015;
 const MAX_FLICK_ALBUMS = 6;
 
@@ -54,11 +52,9 @@ const SNAP_POS_CLOSE = 0.1;
 const DRAG_START_PX = 6;
 const ACTIVE_EPS = 0.08;
 
-// Wheel: smooth + snap after idle
 const WHEEL_SENSITIVITY = 240;
 const WHEEL_SNAP_DELAY = 140;
 
-// cache CSS values (avoid getComputedStyle per cover per frame)
 let cssCache = {
   spacing: 120,
   curveDeg: 38,
@@ -191,7 +187,7 @@ async function load() {
 function applyFilterAndSort(reset = false) {
   const currentId = nearestAlbum()?.id;
 
-  const term = (q?.value || "").trim().toLowerCase();
+  const term = getQueryValue().trim().toLowerCase();
   const base = !term
     ? all
     : all.filter((a) =>
@@ -215,6 +211,18 @@ function applyFilterAndSort(reset = false) {
   renderedCenter = -1;
   rebuildWindowIfNeeded();
   updateMetaUI();
+}
+
+function getQueryValue() {
+  // jos mobiilihaku on olemassa ja näkyvissä, käytä sitä, muuten desktop
+  if (mq && isMobile()) return mq.value || "";
+  if (q) return q.value || "";
+  return "";
+}
+
+function setBothQueries(val) {
+  if (q && q.value !== val) q.value = val;
+  if (mq && mq.value !== val) mq.value = val;
 }
 
 function nearestIndex() {
@@ -322,25 +330,10 @@ function rebuildWindowIfNeeded() {
     btn.type = "button";
     btn.dataset.i = String(i);
 
-    btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
-
-    // mobiilissa: minimoidaan DOM (ei reflection/gloss)
-    const wantReflection = !isMobile() && !MOBILE_TURBO;
-
     btn.innerHTML = `
       <div class="cover">
         <img alt="" decoding="async" />
-        ${wantReflection ? `<div class="gloss"></div>` : ``}
       </div>
-      ${
-        wantReflection
-          ? `
-      <div class="reflection" aria-hidden="true">
-        <div class="refBg"></div>
-        <div class="fade"></div>
-      </div>`
-          : ``
-      }
     `;
 
     const img = btn.querySelector("img");
@@ -394,14 +387,12 @@ function applyTransform(el, i, p, mobile, turbo) {
 
   el.style.zIndex = String(zIndex);
   el.style.opacity = String(opacity);
+  el.style.filter = "";
 
-  // TURBO (mobiili): 2D translate + scale, EI 3D, EI blur
+  // TURBO mobiilille: 2D translate + scale
   if (turbo) {
-    el.style.filter = "";
-
-    // keskikansi selvästi isompi, muut pienenee
     const scale = isActive ? 1.0 : Math.max(0.78, 0.92 - abs * 0.08);
-    const y = abs * 3; // kevyt kaari ilman 3D:tä
+    const y = abs * 3;
 
     el.style.transform = `
       translate(-50%, -50%)
@@ -412,15 +403,12 @@ function applyTransform(el, i, p, mobile, turbo) {
     return;
   }
 
-  // NORMAALI (desktop): coverflow 3D
+  // Desktop coverflow 3D
   const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
   const rotateY = -sign * Math.min(68, abs * curveDeg);
   const z = isActive ? zActive : -abs * zStep;
   const y = abs * 6;
   const scale = isActive ? 1.0 : 0.86 - abs * 0.05;
-
-  const blur = mobile ? 0 : abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
-  el.style.filter = blur ? `blur(${blur}px)` : "";
 
   el.style.transform = `
     translate(-50%, -50%)
@@ -431,12 +419,8 @@ function applyTransform(el, i, p, mobile, turbo) {
     rotateX(${isActive ? 0 : tiltDeg}deg)
     scale(${scale})
   `;
-
-  const r = el.querySelector(".reflection");
-  if (r) r.style.opacity = isActive ? ".22" : ".14";
 }
 
-// Animation loop
 let lastMetaIndex = -1;
 function tick() {
   const n = filtered.length;
@@ -479,7 +463,6 @@ function tick() {
    Input handlers
 ---------------------------- */
 
-// Buttons
 btnPrev?.addEventListener("click", () => {
   if (!filtered.length) return;
   target = clamp(Math.round(target) - 1, 0, filtered.length - 1);
@@ -493,15 +476,23 @@ btnNext?.addEventListener("click", () => {
 mPrev?.addEventListener("click", () => btnPrev?.click());
 mNext?.addEventListener("click", () => btnNext?.click());
 
-// Search / sort
+// Desktop search
 q?.addEventListener("input", () => {
+  setBothQueries(q.value);
   applyFilterAndSort(false);
 });
+
+// Mobile search
+mq?.addEventListener("input", () => {
+  setBothQueries(mq.value);
+  applyFilterAndSort(false);
+});
+
 sortSel?.addEventListener("change", () => {
   applyFilterAndSort(false);
 });
 
-// KEYBOARD
+// Keyboard (ei häiritse kirjoittamista)
 window.addEventListener("keydown", (e) => {
   if (!filtered.length) return;
 
@@ -530,7 +521,7 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// WHEEL smooth + snap
+// Wheel smooth + snap
 let wheelAccum = 0;
 let wheelRAF = 0;
 let wheelSnapTimer = 0;
@@ -568,7 +559,7 @@ stage.addEventListener(
   { passive: false },
 );
 
-/* Drag / swipe: inertia + snap */
+// Drag / swipe: inertia + snap
 let dragging = false;
 let dragStartX = 0;
 let dragStartTarget = 0;
@@ -652,7 +643,6 @@ function endDrag() {
     armSuppressClick();
   }
 
-  // Always snap to nearest
   target = clamp(Math.round(target), 0, max);
   prefetchNearby();
 }
