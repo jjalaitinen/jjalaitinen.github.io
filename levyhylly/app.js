@@ -1,6 +1,9 @@
 const DATA_URL = "./albums.json";
 
-// pienempi render-ikkuna mobiilissa (kevyempi)
+// Turbo-mode: mobiilissa 2D-karuselli (maksimi suorituskyky)
+const MOBILE_TURBO = true;
+
+// Render window
 const WINDOW_RADIUS_DESKTOP = 9; // max 19
 const WINDOW_RADIUS_MOBILE = 4; // max 9
 
@@ -41,7 +44,7 @@ const PREFETCH_CACHE_MAX = 120;
 const SPRING = 0.16;
 const STOP_EPS = 0.0006;
 
-const FLICK_VELOCITY_MIN = 0.35;
+const FLICK_VELOCITY_MIN = 0.35; // px/ms
 const FLICK_GAIN = 0.015;
 const MAX_FLICK_ALBUMS = 6;
 
@@ -52,8 +55,8 @@ const DRAG_START_PX = 6;
 const ACTIVE_EPS = 0.08;
 
 // Wheel: smooth + snap after idle
-const WHEEL_SENSITIVITY = 240; // bigger = slower
-const WHEEL_SNAP_DELAY = 140; // ms after last wheel event -> snap
+const WHEEL_SENSITIVITY = 240;
+const WHEEL_SNAP_DELAY = 140;
 
 // cache CSS values (avoid getComputedStyle per cover per frame)
 let cssCache = {
@@ -321,7 +324,8 @@ function rebuildWindowIfNeeded() {
 
     btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
 
-    const wantReflection = !isMobile();
+    // mobiilissa: minimoidaan DOM (ei reflection/gloss)
+    const wantReflection = !isMobile() && !MOBILE_TURBO;
 
     btn.innerHTML = `
       <div class="cover">
@@ -367,39 +371,57 @@ function rebuildWindowIfNeeded() {
 function updateTransforms() {
   const children = flow.children;
   const mobile = isMobile();
+  const turbo = mobile && MOBILE_TURBO;
 
   for (let k = 0; k < children.length; k++) {
     const el = children[k];
     const i = Number(el.dataset.i);
     if (!Number.isFinite(i)) continue;
-    applyTransform(el, i, pos, mobile);
+    applyTransform(el, i, pos, mobile, turbo);
   }
 }
 
-function applyTransform(el, i, p, mobile) {
+function applyTransform(el, i, p, mobile, turbo) {
   const offset = i - p;
   const abs = Math.abs(offset);
-  const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
 
   const { spacing, curveDeg, tiltDeg, zActive, zStep } = cssCache;
-
   const isActive = abs <= ACTIVE_EPS;
 
   const x = offset * spacing;
-  const rotateY = -sign * Math.min(68, abs * curveDeg);
-  const z = isActive ? zActive : -abs * zStep;
-  const y = abs * 6;
-  const scale = isActive ? 1.0 : 0.86 - abs * 0.05;
   const opacity = abs > 6 ? 0 : 1 - abs * 0.12;
-
-  // mobiilissa ei blurraa
-  const blur = mobile ? 0 : abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
-
   const zIndex = 1000 - Math.round(abs * 1000);
 
   el.style.zIndex = String(zIndex);
   el.style.opacity = String(opacity);
+
+  // TURBO (mobiili): 2D translate + scale, EI 3D, EI blur
+  if (turbo) {
+    el.style.filter = "";
+
+    // keskikansi selvästi isompi, muut pienenee
+    const scale = isActive ? 1.0 : Math.max(0.78, 0.92 - abs * 0.08);
+    const y = abs * 3; // kevyt kaari ilman 3D:tä
+
+    el.style.transform = `
+      translate(-50%, -50%)
+      translateX(${x}px)
+      translateY(${y}px)
+      scale(${scale})
+    `;
+    return;
+  }
+
+  // NORMAALI (desktop): coverflow 3D
+  const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
+  const rotateY = -sign * Math.min(68, abs * curveDeg);
+  const z = isActive ? zActive : -abs * zStep;
+  const y = abs * 6;
+  const scale = isActive ? 1.0 : 0.86 - abs * 0.05;
+
+  const blur = mobile ? 0 : abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
   el.style.filter = blur ? `blur(${blur}px)` : "";
+
   el.style.transform = `
     translate(-50%, -50%)
     translateX(${x}px)
@@ -426,7 +448,6 @@ function tick() {
     pos += diff * SPRING;
     if (Math.abs(diff) < STOP_EPS) pos = target;
 
-    // snap when close (only when not dragging)
     if (!dragging) {
       const rounded = Math.round(target);
       if (
@@ -480,7 +501,7 @@ sortSel?.addEventListener("change", () => {
   applyFilterAndSort(false);
 });
 
-// KEYBOARD: takaisin (ja vältetään sotkemasta tekstikenttään kirjoittamista)
+// KEYBOARD
 window.addEventListener("keydown", (e) => {
   if (!filtered.length) return;
 
@@ -509,7 +530,7 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// WHEEL: smooth + snap when wheel stops
+// WHEEL smooth + snap
 let wheelAccum = 0;
 let wheelRAF = 0;
 let wheelSnapTimer = 0;
@@ -631,7 +652,7 @@ function endDrag() {
     armSuppressClick();
   }
 
-  // Always snap to nearest when released
+  // Always snap to nearest
   target = clamp(Math.round(target), 0, max);
   prefetchNearby();
 }
