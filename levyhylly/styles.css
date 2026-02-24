@@ -18,7 +18,6 @@
   --infoH: 78px;
   --mobileCtrlsH: 0px;
 
-  /* MUUTOS: mobiilin yläalue (haku) varattava tila */
   --mobileTopH: 0px;
 }
 
@@ -258,17 +257,27 @@ body {
   background: rgba(15, 23, 42, 0.55);
 }
 
+/* MUUTOS:
+   - img on aina näkyvä (opacity 1)
+   - fade-in tehdään vain kun .fadeIn class on päällä
+*/
 .cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  opacity: 0;
-  transition: opacity 0.18s ease;
+
+  opacity: 1;
   pointer-events: none;
   -webkit-user-drag: none;
 }
-.album.loaded .cover img {
+
+/* Kun kuva on "uusi", annetaan kevyt fade sisään */
+.album.fadeIn .cover img {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.album.fadeIn.loaded .cover img {
   opacity: 1;
 }
 
@@ -329,7 +338,6 @@ body {
     --spacing: 92px;
     --perspective: 760px;
 
-    /* MUUTOS: varataan hakukentän + safe-area + pienen marginaalin verran */
     --mobileTopH: calc(env(safe-area-inset-top) + 68px);
   }
 
@@ -337,7 +345,6 @@ body {
     display: none;
   }
 
-  /* MUUTOS: siirretään koko näkymää alas hakukentän verran */
   .appMain {
     padding-top: var(--mobileTopH);
     padding-bottom: calc(
@@ -345,7 +352,6 @@ body {
     );
   }
 
-  /* Mobiilihaku ylös ja keskelle */
   .mobileTopSearch {
     position: fixed;
     left: 0;
@@ -375,13 +381,12 @@ body {
     background: rgba(2, 6, 23, 0.55);
     color: var(--text);
     padding: 10px 12px;
-    font-size: 16px; /* iOS zoom-fix */
+    font-size: 16px;
     outline: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
 
-  /* MUUTOS: topbar just hakukentän alle (nyt appMain jo siirtyy, mutta pidetään pillin sijoittelu siistinä) */
   .topbar {
     top: 10px;
   }

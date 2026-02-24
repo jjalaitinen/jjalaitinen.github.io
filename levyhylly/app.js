@@ -35,8 +35,13 @@ let renderedCenter = -1;
 let renderedStart = 0;
 let renderedEnd = -1;
 
+// Prefetch cache
 const prefetchCache = new Map();
 const PREFETCH_CACHE_MAX = 120;
+
+// MUUTOS: pidetään kirjaa kuvista jotka on jo ladattu kerran,
+// jotta ei tehdä "fade-in" joka kerta kun DOM rakennetaan uusiksi.
+const loadedUrls = new Set();
 
 // --- tuning ---
 const SPRING = 0.16;
@@ -184,6 +189,16 @@ async function load() {
   prefetchNearby(true);
 }
 
+function getQueryValue() {
+  if (mq && isMobile()) return mq.value || "";
+  if (q) return q.value || "";
+  return "";
+}
+function setBothQueries(val) {
+  if (q && q.value !== val) q.value = val;
+  if (mq && mq.value !== val) mq.value = val;
+}
+
 function applyFilterAndSort(reset = false) {
   const currentId = nearestAlbum()?.id;
 
@@ -213,23 +228,10 @@ function applyFilterAndSort(reset = false) {
   updateMetaUI();
 }
 
-function getQueryValue() {
-  // jos mobiilihaku on olemassa ja näkyvissä, käytä sitä, muuten desktop
-  if (mq && isMobile()) return mq.value || "";
-  if (q) return q.value || "";
-  return "";
-}
-
-function setBothQueries(val) {
-  if (q && q.value !== val) q.value = val;
-  if (mq && mq.value !== val) mq.value = val;
-}
-
 function nearestIndex() {
   if (!filtered.length) return 0;
   return clamp(Math.round(pos), 0, filtered.length - 1);
 }
-
 function nearestAlbum() {
   return filtered[nearestIndex()];
 }
@@ -321,7 +323,8 @@ function rebuildWindowIfNeeded() {
   renderedStart = start;
   renderedEnd = end;
 
-  flow.innerHTML = "";
+  // MUUTOS: rakennetaan fragmenttiin ja vaihdetaan kerralla (vähemmän "välitilaa")
+  const frag = document.createDocumentFragment();
 
   for (let i = start; i <= end; i++) {
     const a = filtered[i];
@@ -329,6 +332,10 @@ function rebuildWindowIfNeeded() {
     btn.className = "album";
     btn.type = "button";
     btn.dataset.i = String(i);
+
+    // fade-in vain jos tätä URL:ia ei ole ennen nähty
+    const needsFade = !loadedUrls.has(a.coverUrl);
+    if (needsFade) btn.classList.add("fadeIn");
 
     btn.innerHTML = `
       <div class="cover">
@@ -340,12 +347,25 @@ function rebuildWindowIfNeeded() {
     img.loading = i === center ? "eager" : "lazy";
     if (i === center) img.fetchPriority = "high";
 
-    const markLoaded = () => btn.classList.add("loaded");
+    const markLoaded = () => {
+      btn.classList.add("loaded");
+      loadedUrls.add(a.coverUrl);
+      btn.classList.remove("fadeIn"); // ettei jää päälle
+    };
+
     img.addEventListener("load", markLoaded, { once: true });
     img.addEventListener("error", markLoaded, { once: true });
 
     img.src = a.coverUrl;
     img.alt = `${a.artist} – ${a.title}`;
+
+    // MUUTOS: jos kuva on jo cache:ssa ja "complete", merkitään heti loaded -> ei blinkkaa
+    if (img.complete && img.naturalWidth > 0) {
+      markLoaded();
+    } else if (!needsFade) {
+      // jos ei fadea, varmistetaan ettei odotella load eventtiä näyttämiseen
+      btn.classList.add("loaded");
+    }
 
     btn.addEventListener("click", (ev) => {
       if (suppressClick) {
@@ -357,8 +377,10 @@ function rebuildWindowIfNeeded() {
       prefetchNearby();
     });
 
-    flow.appendChild(btn);
+    frag.appendChild(btn);
   }
+
+  flow.replaceChildren(frag);
 }
 
 function updateTransforms() {
@@ -389,7 +411,6 @@ function applyTransform(el, i, p, mobile, turbo) {
   el.style.opacity = String(opacity);
   el.style.filter = "";
 
-  // TURBO mobiilille: 2D translate + scale
   if (turbo) {
     const scale = isActive ? 1.0 : Math.max(0.78, 0.92 - abs * 0.08);
     const y = abs * 3;
@@ -403,7 +424,6 @@ function applyTransform(el, i, p, mobile, turbo) {
     return;
   }
 
-  // Desktop coverflow 3D
   const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
   const rotateY = -sign * Math.min(68, abs * curveDeg);
   const z = isActive ? zActive : -abs * zStep;
@@ -476,13 +496,10 @@ btnNext?.addEventListener("click", () => {
 mPrev?.addEventListener("click", () => btnPrev?.click());
 mNext?.addEventListener("click", () => btnNext?.click());
 
-// Desktop search
 q?.addEventListener("input", () => {
   setBothQueries(q.value);
   applyFilterAndSort(false);
 });
-
-// Mobile search
 mq?.addEventListener("input", () => {
   setBothQueries(mq.value);
   applyFilterAndSort(false);
@@ -492,7 +509,6 @@ sortSel?.addEventListener("change", () => {
   applyFilterAndSort(false);
 });
 
-// Keyboard (ei häiritse kirjoittamista)
 window.addEventListener("keydown", (e) => {
   if (!filtered.length) return;
 
@@ -606,7 +622,7 @@ stage.addEventListener(
     const now = performance.now();
     const dxTotal = ev.clientX - dragStartX;
 
-    if (!dragMoved && Math.abs(dxTotal) >= DRAG_START_PX) {
+    if (!dragMoved && Math.abs(dxTotal) >= 6) {
       dragMoved = true;
       armSuppressClick();
     }
@@ -650,7 +666,6 @@ function endDrag() {
 window.addEventListener("pointerup", endDrag, { passive: true });
 window.addEventListener("pointercancel", endDrag, { passive: true });
 
-// Resize: update cache + rebuild
 window.addEventListener(
   "resize",
   () => {
