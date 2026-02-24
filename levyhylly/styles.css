@@ -17,6 +17,9 @@
   --headerH: 74px;
   --infoH: 78px;
   --mobileCtrlsH: 0px;
+
+  /* MUUTOS: mobiilin yläalue (haku) varattava tila */
+  --mobileTopH: 0px;
 }
 
 * {
@@ -325,14 +328,18 @@ body {
     --size: min(78vw, 340px);
     --spacing: 92px;
     --perspective: 760px;
+
+    /* MUUTOS: varataan hakukentän + safe-area + pienen marginaalin verran */
+    --mobileTopH: calc(env(safe-area-inset-top) + 68px);
   }
 
   .appHeader {
     display: none;
   }
 
+  /* MUUTOS: siirretään koko näkymää alas hakukentän verran */
   .appMain {
-    padding-top: 0;
+    padding-top: var(--mobileTopH);
     padding-bottom: calc(
       var(--infoH) + var(--mobileCtrlsH) + env(safe-area-inset-bottom)
     );
@@ -368,18 +375,15 @@ body {
     background: rgba(2, 6, 23, 0.55);
     color: var(--text);
     padding: 10px 12px;
-
-    /* MUUTOS: iOS zoom-fix -> vähintään 16px */
-    font-size: 16px;
-
+    font-size: 16px; /* iOS zoom-fix */
     outline: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
 
-  /* Count-pilleri alemmas ettei osu hakukenttään */
+  /* MUUTOS: topbar just hakukentän alle (nyt appMain jo siirtyy, mutta pidetään pillin sijoittelu siistinä) */
   .topbar {
-    top: calc(env(safe-area-inset-top) + 66px);
+    top: 10px;
   }
   .topbarPill {
     font-size: 12px;
