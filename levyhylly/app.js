@@ -39,8 +39,7 @@ let renderedEnd = -1;
 const prefetchCache = new Map();
 const PREFETCH_CACHE_MAX = 120;
 
-// MUUTOS: pidetään kirjaa kuvista jotka on jo ladattu kerran,
-// jotta ei tehdä "fade-in" joka kerta kun DOM rakennetaan uusiksi.
+// Kuvat jo ladattu kerran -> ei “räpsy”
 const loadedUrls = new Set();
 
 // --- tuning ---
@@ -55,10 +54,18 @@ const SNAP_WHEN_CLOSE = 0.06;
 const SNAP_POS_CLOSE = 0.1;
 
 const DRAG_START_PX = 6;
+
+// HUOM: aktiivisen “isoksi” -tilan kynnys ei enää perustu pelkkään abs-offsettiin,
+// vaan siihen että ollaan “settled” (pysähdytty).
+// Tämä arvo voi olla pieni, koska settledIndex ratkaisee aktiivisuuden.
 const ACTIVE_EPS = 0.08;
 
 const WHEEL_SENSITIVITY = 240;
 const WHEEL_SNAP_DELAY = 140;
+
+// MUUTOS: “pysähtymisen” ehdot (tällä estetään “mikrosekunnin iso-moodi”)
+const SETTLED_TARGET_EPS = 0.001; // target hyvin lähellä kokonaislukua
+const SETTLED_POS_EPS = 0.01; // pos hyvin lähellä targetia (animaatio käytännössä valmis)
 
 let cssCache = {
   spacing: 120,
@@ -323,7 +330,6 @@ function rebuildWindowIfNeeded() {
   renderedStart = start;
   renderedEnd = end;
 
-  // MUUTOS: rakennetaan fragmenttiin ja vaihdetaan kerralla (vähemmän "välitilaa")
   const frag = document.createDocumentFragment();
 
   for (let i = start; i <= end; i++) {
@@ -333,7 +339,6 @@ function rebuildWindowIfNeeded() {
     btn.type = "button";
     btn.dataset.i = String(i);
 
-    // fade-in vain jos tätä URL:ia ei ole ennen nähty
     const needsFade = !loadedUrls.has(a.coverUrl);
     if (needsFade) btn.classList.add("fadeIn");
 
@@ -350,7 +355,7 @@ function rebuildWindowIfNeeded() {
     const markLoaded = () => {
       btn.classList.add("loaded");
       loadedUrls.add(a.coverUrl);
-      btn.classList.remove("fadeIn"); // ettei jää päälle
+      btn.classList.remove("fadeIn");
     };
 
     img.addEventListener("load", markLoaded, { once: true });
@@ -359,11 +364,9 @@ function rebuildWindowIfNeeded() {
     img.src = a.coverUrl;
     img.alt = `${a.artist} – ${a.title}`;
 
-    // MUUTOS: jos kuva on jo cache:ssa ja "complete", merkitään heti loaded -> ei blinkkaa
     if (img.complete && img.naturalWidth > 0) {
       markLoaded();
     } else if (!needsFade) {
-      // jos ei fadea, varmistetaan ettei odotella load eventtiä näyttämiseen
       btn.classList.add("loaded");
     }
 
@@ -383,25 +386,40 @@ function rebuildWindowIfNeeded() {
   flow.replaceChildren(frag);
 }
 
+// MUUTOS: lasketaan “settledIndex” vain kun oikeasti pysähdytty.
+function getSettledIndex() {
+  if (!filtered.length) return -1;
+  if (dragging) return -1;
+
+  const rounded = Math.round(target);
+  const targetClose = Math.abs(target - rounded) <= SETTLED_TARGET_EPS;
+  const posClose = Math.abs(pos - target) <= SETTLED_POS_EPS;
+
+  return targetClose && posClose ? clamp(rounded, 0, filtered.length - 1) : -1;
+}
+
 function updateTransforms() {
   const children = flow.children;
   const mobile = isMobile();
   const turbo = mobile && MOBILE_TURBO;
+  const settledIndex = getSettledIndex();
 
   for (let k = 0; k < children.length; k++) {
     const el = children[k];
     const i = Number(el.dataset.i);
     if (!Number.isFinite(i)) continue;
-    applyTransform(el, i, pos, mobile, turbo);
+    applyTransform(el, i, pos, mobile, turbo, settledIndex);
   }
 }
 
-function applyTransform(el, i, p, mobile, turbo) {
+function applyTransform(el, i, p, mobile, turbo, settledIndex) {
   const offset = i - p;
   const abs = Math.abs(offset);
 
   const { spacing, curveDeg, tiltDeg, zActive, zStep } = cssCache;
-  const isActive = abs <= ACTIVE_EPS;
+
+  // MUUTOS: aktiivinen = vain kun pysähdytty juuri tämän indeksin kohdalle
+  const isActive = i === settledIndex;
 
   const x = offset * spacing;
   const opacity = abs > 6 ? 0 : 1 - abs * 0.12;
@@ -412,6 +430,7 @@ function applyTransform(el, i, p, mobile, turbo) {
   el.style.filter = "";
 
   if (turbo) {
+    // Turbo: keskikansi EI hyppää isoksi liikkeessä.
     const scale = isActive ? 1.0 : Math.max(0.78, 0.92 - abs * 0.08);
     const y = abs * 3;
 
@@ -424,7 +443,10 @@ function applyTransform(el, i, p, mobile, turbo) {
     return;
   }
 
+  // Desktop coverflow 3D
   const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
+
+  // MUUTOS: z/rotate/scale “iso” vain kun settled
   const rotateY = -sign * Math.min(68, abs * curveDeg);
   const z = isActive ? zActive : -abs * zStep;
   const y = abs * 6;
@@ -622,7 +644,7 @@ stage.addEventListener(
     const now = performance.now();
     const dxTotal = ev.clientX - dragStartX;
 
-    if (!dragMoved && Math.abs(dxTotal) >= 6) {
+    if (!dragMoved && Math.abs(dxTotal) >= DRAG_START_PX) {
       dragMoved = true;
       armSuppressClick();
     }
