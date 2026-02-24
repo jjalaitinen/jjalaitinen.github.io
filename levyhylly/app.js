@@ -1,8 +1,8 @@
 const DATA_URL = "./albums.json";
 
-// Adaptive virtualisointi
+// pienempi render-ikkuna mobiilissa (kevyempi)
 const WINDOW_RADIUS_DESKTOP = 9; // max 19
-const WINDOW_RADIUS_MOBILE = 5; // max 11
+const WINDOW_RADIUS_MOBILE = 4; // max 9
 
 const $ = (sel) => document.querySelector(sel);
 const stage = $("#stage");
@@ -37,23 +37,41 @@ let renderedEnd = -1;
 const prefetchCache = new Map();
 const PREFETCH_CACHE_MAX = 120;
 
-// --- iOS-like inertia tuning ---
+// --- tuning ---
 const SPRING = 0.16;
 const STOP_EPS = 0.0006;
 
-const FLICK_VELOCITY_MIN = 0.35; // px/ms
+const FLICK_VELOCITY_MIN = 0.35;
 const FLICK_GAIN = 0.015;
 const MAX_FLICK_ALBUMS = 6;
 
-// MUUTOS: snap aggressiivisemmaksi kun ei dragata
 const SNAP_WHEN_CLOSE = 0.06;
 const SNAP_POS_CLOSE = 0.1;
 
-// MUUTOS: drag vs click threshold
 const DRAG_START_PX = 6;
-
-// MUUTOS: “active” kynnys – tämän sisällä kansi on täysin iso
 const ACTIVE_EPS = 0.08;
+
+// Wheel: smooth + snap after idle
+const WHEEL_SENSITIVITY = 240; // bigger = slower
+const WHEEL_SNAP_DELAY = 140; // ms after last wheel event -> snap
+
+// cache CSS values (avoid getComputedStyle per cover per frame)
+let cssCache = {
+  spacing: 120,
+  curveDeg: 38,
+  tiltDeg: 12,
+  zActive: 180,
+  zStep: 42,
+};
+
+function refreshCssCache() {
+  const rootStyle = getComputedStyle(document.documentElement);
+  cssCache.spacing = parseFloat(rootStyle.getPropertyValue("--spacing")) || 120;
+  cssCache.curveDeg = parseFloat(rootStyle.getPropertyValue("--curve")) || 38;
+  cssCache.tiltDeg = parseFloat(rootStyle.getPropertyValue("--tilt")) || 12;
+  cssCache.zActive = parseFloat(rootStyle.getPropertyValue("--zActive")) || 180;
+  cssCache.zStep = parseFloat(rootStyle.getPropertyValue("--zStep")) || 42;
+}
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
@@ -64,9 +82,8 @@ function isMobile() {
 function windowRadius() {
   return isMobile() ? WINDOW_RADIUS_MOBILE : WINDOW_RADIUS_DESKTOP;
 }
-
 function prefetchRadius() {
-  return isMobile() ? 4 : 3;
+  return isMobile() ? 3 : 3;
 }
 
 function normalizeAlbum(a, i) {
@@ -122,6 +139,8 @@ function applySort(list) {
 }
 
 async function load() {
+  refreshCssCache();
+
   try {
     const res = await fetch(DATA_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
@@ -151,13 +170,9 @@ async function load() {
           </linearGradient></defs>
           <rect width="800" height="800" fill="url(#g)"/>
           <rect x="70" y="70" width="660" height="660" rx="54" fill="none" stroke="#334155" stroke-width="10"/>
-          <text x="50%" y="46%" dominant-baseline="middle" text-anchor="middle"
-            font-family="ui-sans-serif,system-ui" font-size="34" fill="#e5e7eb">
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+            font-family="ui-sans-serif,system-ui" font-size="30" fill="#e5e7eb">
             DATA_URL ➜ albums.json
-          </text>
-          <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle"
-            font-family="ui-sans-serif,system-ui" font-size="20" fill="#94a3b8">
-            (tai suora URL + CORS)
           </text>
         </svg>
       `),
@@ -206,18 +221,6 @@ function nearestIndex() {
 
 function nearestAlbum() {
   return filtered[nearestIndex()];
-}
-
-function jump(delta) {
-  if (!filtered.length) return;
-  target = clamp(Math.round(target + delta), 0, filtered.length - 1);
-  prefetchNearby();
-}
-
-function setTargetIndex(i) {
-  if (!filtered.length) return;
-  target = clamp(i, 0, filtered.length - 1);
-  prefetchNearby();
 }
 
 function updateMetaUI() {
@@ -318,15 +321,22 @@ function rebuildWindowIfNeeded() {
 
     btn.style.setProperty("--cover-bg", `url("${a.coverUrl}")`);
 
+    const wantReflection = !isMobile();
+
     btn.innerHTML = `
       <div class="cover">
         <img alt="" decoding="async" />
-        <div class="gloss"></div>
+        ${wantReflection ? `<div class="gloss"></div>` : ``}
       </div>
+      ${
+        wantReflection
+          ? `
       <div class="reflection" aria-hidden="true">
         <div class="refBg"></div>
         <div class="fade"></div>
-      </div>
+      </div>`
+          : ``
+      }
     `;
 
     const img = btn.querySelector("img");
@@ -346,7 +356,8 @@ function rebuildWindowIfNeeded() {
         ev.stopPropagation();
         return;
       }
-      setTargetIndex(i);
+      target = clamp(i, 0, filtered.length - 1);
+      prefetchNearby();
     });
 
     flow.appendChild(btn);
@@ -355,27 +366,23 @@ function rebuildWindowIfNeeded() {
 
 function updateTransforms() {
   const children = flow.children;
+  const mobile = isMobile();
+
   for (let k = 0; k < children.length; k++) {
     const el = children[k];
     const i = Number(el.dataset.i);
     if (!Number.isFinite(i)) continue;
-    applyTransform(el, i, pos);
+    applyTransform(el, i, pos, mobile);
   }
 }
 
-function applyTransform(el, i, p) {
+function applyTransform(el, i, p, mobile) {
   const offset = i - p;
   const abs = Math.abs(offset);
   const sign = offset === 0 ? 0 : offset > 0 ? 1 : -1;
 
-  const rootStyle = getComputedStyle(document.documentElement);
-  const spacing = parseFloat(rootStyle.getPropertyValue("--spacing")) || 120;
-  const curveDeg = parseFloat(rootStyle.getPropertyValue("--curve")) || 38;
-  const tiltDeg = parseFloat(rootStyle.getPropertyValue("--tilt")) || 12;
-  const zActive = parseFloat(rootStyle.getPropertyValue("--zActive")) || 180;
-  const zStep = parseFloat(rootStyle.getPropertyValue("--zStep")) || 42;
+  const { spacing, curveDeg, tiltDeg, zActive, zStep } = cssCache;
 
-  // MUUTOS: active ei vaadi täydellistä nollaa
   const isActive = abs <= ACTIVE_EPS;
 
   const x = offset * spacing;
@@ -384,12 +391,15 @@ function applyTransform(el, i, p) {
   const y = abs * 6;
   const scale = isActive ? 1.0 : 0.86 - abs * 0.05;
   const opacity = abs > 6 ? 0 : 1 - abs * 0.12;
-  const blur = abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
+
+  // mobiilissa ei blurraa
+  const blur = mobile ? 0 : abs > 0.0001 ? Math.min(6, abs * 1.1) : 0;
+
   const zIndex = 1000 - Math.round(abs * 1000);
 
   el.style.zIndex = String(zIndex);
   el.style.opacity = String(opacity);
-  el.style.filter = `blur(${blur}px)`;
+  el.style.filter = blur ? `blur(${blur}px)` : "";
   el.style.transform = `
     translate(-50%, -50%)
     translateX(${x}px)
@@ -416,7 +426,7 @@ function tick() {
     pos += diff * SPRING;
     if (Math.abs(diff) < STOP_EPS) pos = target;
 
-    // MUUTOS: jos ei dragata, snapataan target kokonaiseksi kun ollaan lähellä
+    // snap when close (only when not dragging)
     if (!dragging) {
       const rounded = Math.round(target);
       if (
@@ -425,7 +435,6 @@ function tick() {
       ) {
         target = clamp(rounded, 0, max);
       }
-      // ja kun pos on todella lähellä, lukitaan suoraan targetiin
       if (Math.abs(pos - target) < 0.001) pos = target;
     }
 
@@ -449,44 +458,19 @@ function tick() {
    Input handlers
 ---------------------------- */
 
-// Wheel smooth
-let wheelAccum = 0;
-let wheelRAF = 0;
-
-stage.addEventListener(
-  "wheel",
-  (ev) => {
-    ev.preventDefault();
-    if (!filtered.length) return;
-
-    wheelAccum += ev.deltaY;
-
-    if (!wheelRAF) {
-      wheelRAF = requestAnimationFrame(() => {
-        wheelRAF = 0;
-        const step = wheelAccum / 240;
-        wheelAccum = 0;
-        if (step !== 0) target = clamp(target + step, 0, filtered.length - 1);
-      });
-    }
-  },
-  { passive: false },
-);
-
 // Buttons
-btnPrev?.addEventListener("click", () => jump(-1));
-btnNext?.addEventListener("click", () => jump(1));
-mPrev?.addEventListener("click", () => jump(-1));
-mNext?.addEventListener("click", () => jump(1));
-
-// Keyboard
-window.addEventListener("keydown", (e) => {
+btnPrev?.addEventListener("click", () => {
   if (!filtered.length) return;
-  if (e.key === "ArrowLeft") jump(-1);
-  if (e.key === "ArrowRight") jump(1);
-  if (e.key === "Home") setTargetIndex(0);
-  if (e.key === "End") setTargetIndex(filtered.length - 1);
+  target = clamp(Math.round(target) - 1, 0, filtered.length - 1);
+  prefetchNearby();
 });
+btnNext?.addEventListener("click", () => {
+  if (!filtered.length) return;
+  target = clamp(Math.round(target) + 1, 0, filtered.length - 1);
+  prefetchNearby();
+});
+mPrev?.addEventListener("click", () => btnPrev?.click());
+mNext?.addEventListener("click", () => btnNext?.click());
 
 // Search / sort
 q?.addEventListener("input", () => {
@@ -496,7 +480,74 @@ sortSel?.addEventListener("change", () => {
   applyFilterAndSort(false);
 });
 
-/* Drag / swipe: continuous + inertia */
+// KEYBOARD: takaisin (ja vältetään sotkemasta tekstikenttään kirjoittamista)
+window.addEventListener("keydown", (e) => {
+  if (!filtered.length) return;
+
+  const tag =
+    e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+  const isTyping =
+    tag === "input" || tag === "textarea" || e.target?.isContentEditable;
+  if (isTyping) return;
+
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    target = clamp(Math.round(target) - 1, 0, filtered.length - 1);
+    prefetchNearby();
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    target = clamp(Math.round(target) + 1, 0, filtered.length - 1);
+    prefetchNearby();
+  } else if (e.key === "Home") {
+    e.preventDefault();
+    target = 0;
+    prefetchNearby();
+  } else if (e.key === "End") {
+    e.preventDefault();
+    target = filtered.length - 1;
+    prefetchNearby();
+  }
+});
+
+// WHEEL: smooth + snap when wheel stops
+let wheelAccum = 0;
+let wheelRAF = 0;
+let wheelSnapTimer = 0;
+
+function armWheelSnap() {
+  if (wheelSnapTimer) clearTimeout(wheelSnapTimer);
+  wheelSnapTimer = setTimeout(() => {
+    if (!filtered.length) return;
+    if (dragging) return;
+    target = clamp(Math.round(target), 0, filtered.length - 1);
+    prefetchNearby();
+  }, WHEEL_SNAP_DELAY);
+}
+
+stage.addEventListener(
+  "wheel",
+  (ev) => {
+    ev.preventDefault();
+    if (!filtered.length) return;
+
+    wheelAccum += ev.deltaY;
+    armWheelSnap();
+
+    if (!wheelRAF) {
+      wheelRAF = requestAnimationFrame(() => {
+        wheelRAF = 0;
+        const step = wheelAccum / WHEEL_SENSITIVITY;
+        wheelAccum = 0;
+        if (step !== 0) {
+          target = clamp(target + step, 0, filtered.length - 1);
+        }
+      });
+    }
+  },
+  { passive: false },
+);
+
+/* Drag / swipe: inertia + snap */
 let dragging = false;
 let dragStartX = 0;
 let dragStartTarget = 0;
@@ -507,11 +558,6 @@ let v = 0;
 
 let dragMoved = false;
 let suppressClick = false;
-
-function getSpacingPx() {
-  const rootStyle = getComputedStyle(document.documentElement);
-  return parseFloat(rootStyle.getPropertyValue("--spacing")) || 120;
-}
 
 function armSuppressClick() {
   suppressClick = true;
@@ -553,8 +599,7 @@ stage.addEventListener(
       armSuppressClick();
     }
 
-    const spacing = getSpacingPx();
-    const deltaIndex = dxTotal / spacing;
+    const deltaIndex = dxTotal / cssCache.spacing;
     target = clamp(
       dragStartTarget - deltaIndex,
       0,
@@ -580,25 +625,25 @@ function endDrag() {
 
   const speed = Math.abs(v);
   if (speed >= FLICK_VELOCITY_MIN) {
-    let fling = -v * (FLICK_GAIN * getSpacingPx());
+    let fling = -v * (FLICK_GAIN * cssCache.spacing);
     fling = clamp(fling, -MAX_FLICK_ALBUMS, MAX_FLICK_ALBUMS);
     target = clamp(target + fling, 0, max);
     armSuppressClick();
   }
 
-  // MUUTOS: AINA snap lähimpään kun sormi/hiiri nousee
+  // Always snap to nearest when released
   target = clamp(Math.round(target), 0, max);
-
   prefetchNearby();
 }
 
 window.addEventListener("pointerup", endDrag, { passive: true });
 window.addEventListener("pointercancel", endDrag, { passive: true });
 
-// Responsive changes
+// Resize: update cache + rebuild
 window.addEventListener(
   "resize",
   () => {
+    refreshCssCache();
     renderedCenter = -1;
     rebuildWindowIfNeeded();
     prefetchNearby();
