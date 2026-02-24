@@ -2,9 +2,10 @@
 <html lang="fi">
   <head>
     <meta charset="utf-8" />
+    <!-- MUUTOS: estetään iOS-zoom (myös pinch) -->
     <meta
       name="viewport"
-      content="width=device-width,initial-scale=1,viewport-fit=cover"
+      content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no"
     />
     <title>Levyhylly – Cover Flow</title>
     <link rel="stylesheet" href="./styles.css" />
@@ -61,7 +62,7 @@
       </div>
     </main>
 
-    <!-- Mobile controls (napit kannen ja metan väliin) -->
+    <!-- Mobile controls -->
     <div class="mobileControls">
       <button id="mPrev" class="mBtn" type="button" aria-label="Edellinen">
         ←

@@ -166,9 +166,9 @@ body {
   padding-right: 34px;
 }
 
-/* ---------- Mobile search (top center) ---------- */
+/* ---------- Mobile search ---------- */
 .mobileTopSearch {
-  display: none; /* shown on mobile */
+  display: none;
 }
 
 /* ---------- Layout ---------- */
@@ -269,7 +269,6 @@ body {
   opacity: 1;
 }
 
-/* Mobile controls between cover and meta */
 .mobileControls {
   display: none;
 }
@@ -369,7 +368,10 @@ body {
     background: rgba(2, 6, 23, 0.55);
     color: var(--text);
     padding: 10px 12px;
-    font-size: 14px;
+
+    /* MUUTOS: iOS zoom-fix -> vähintään 16px */
+    font-size: 16px;
+
     outline: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
